@@ -58,23 +58,18 @@ namespace argparse{
                      const char* metavar,
                      const char* dest,
                      bool deprecated){
-                if(flags != NULL)
-                    this->flags = (char*) malloc(sizeof(*flags) * (strlen(flags) + 1));
-                else
-                    this->flags = NULL;
-                if(action != NULL)
-                    this->action = (char*) malloc(sizeof(*action) * (strlen(action) + 1));
-                else
-                    this->action = NULL;
+                this->flags = alloc_and_copy_string(flags);
+                this->action = alloc_and_copy_string(action);
+                this->type = alloc_and_copy_string(type);
                 if(type != NULL){
-                    this->type = (char*) malloc(sizeof(*type) * (strlen(type) + 1));
                     if(strcmp(type, "int") == 0){
                         this->default_value.integer = default_value.integer;
                     }
                     else if(strcmp(type, "string") == 0){
                         if(default_value.const_string != NULL){
-                            this->default_value.string = (char*) malloc(sizeof(*default_value.const_string) * (strlen(default_value.const_string) + 1));
-                            strcpy(this->default_value.string, default_value.const_string);
+                            // this->default_value.string = (char*) malloc(sizeof(*default_value.const_string) * (strlen(default_value.const_string) + 1));
+                            // strcpy(this->default_value.string, default_value.const_string);
+                            this->default_value.string = alloc_and_copy_string(default_value.const_string);
                         }
                     }
                 }
@@ -83,37 +78,15 @@ namespace argparse{
                 this->nchoices = nchoices;
                 // this->choices = (char**) malloc(sizeof(*choices) * nchoices);
                 this->choices = choices;    // Won't work with a static input
-                if(help != NULL)
-                    this->help = (char*) malloc(sizeof(*help) * (strlen(help) + 1));
-                else
-                    this->help = NULL;
-                if(metavar != NULL)
-                    this->metavar = (char*) malloc(sizeof(*metavar) * (strlen(metavar) + 1));
-                else
-                    this->metavar = NULL;
-                if(dest != NULL)
-                    this->dest = (char*) malloc(sizeof(*dest) * (strlen(dest) + 1));
-                else
-                    this->dest = NULL;
+                this->help = alloc_and_copy_string(help);
+                this->metavar = alloc_and_copy_string(metavar);
+                this->dest = alloc_and_copy_string(dest);
 
-                if(flags != NULL)
-                    strcpy(this->flags, flags);
-                if(action != NULL)
-                    strcpy(this->action, action);
                 this->nargs = nargs;
                 this->constant = constant;
-                // this->default_value_int = default_value;
-                if(type != NULL)
-                    strcpy(this->type, type);
                 // this->nchoices = nchoices;
                 // no choices management for now
                 this->required = required;
-                if(help != NULL)
-                    strcpy(this->help, help);
-                if(metavar != NULL)
-                    strcpy(this->metavar, metavar);
-                if(dest != NULL)
-                    strcpy(this->dest, dest);
                 this->deprecated = deprecated;
 
                 this->previous = NULL;
@@ -154,49 +127,14 @@ namespace argparse{
                       const char* help,
                       const char* metavar){
                 this->parent_parser = parent_parser;
-                if(title != NULL){
-                    this->title = (char*) malloc(sizeof(*title) * (strlen(title) + 1));
-                    strcpy(this->title, title);
-                }
-                else
-                    this->title = NULL;
-                if(description != NULL){
-                    this->description = (char*) malloc(sizeof(*description) * (strlen(description) + 1));
-                    strcpy(this->description, description);
-                }
-                else
-                    this->description = NULL;
-                if(prog != NULL){
-                    this->prog = (char*) malloc(sizeof(*prog) * (strlen(prog) + 1));
-                    strcpy(this->prog, prog);
-                }
-                else
-                    this->prog = NULL;
-                if(action != NULL){
-                    this->action = (char*) malloc(sizeof(*action) * (strlen(action) + 1));
-                    strcpy(this->action, action);
-                }
-                else
-                    this->action = NULL;
-                if(dest != NULL){
-                    this->dest = (char*) malloc(sizeof(*dest) * (strlen(dest) + 1));
-                    strcpy(this->dest, dest);
-                }
-                else
-                    this->dest = NULL;
+                this->title = alloc_and_copy_string(title);
+                this->description = alloc_and_copy_string(description);
+                this->prog = alloc_and_copy_string(prog);
+                this->action = alloc_and_copy_string(action);
+                this->dest = alloc_and_copy_string(dest);
                 this->required = required;
-                if(help != NULL){
-                    this->help = (char*) malloc(sizeof(*help) * (strlen(help) + 1));
-                    strcpy(this->help, help);
-                }
-                else
-                    this->help = NULL;
-                if(metavar != NULL){
-                    this->metavar = (char*) malloc(sizeof(*metavar) * (strlen(metavar) + 1));
-                    strcpy(this->metavar, metavar);
-                }
-                else
-                    this->metavar = NULL;
+                this->help = alloc_and_copy_string(help);
+                this->metavar = alloc_and_copy_string(metavar);
                 
                 this->first_parser = NULL;
                 this->last_parser = NULL;
@@ -210,20 +148,9 @@ namespace argparse{
                 // subparser_element->parser = new ArgumentParser(this->parent_parser);
                 subparser_element->parser = declare_new_argument_parser(this->parent_parser);
                 // subparser_element->sub_command = NULL;
-                if(sub_command != NULL){
-                    // printf(sub_command);
-                    subparser_element->sub_command = (char*) malloc(sizeof(*sub_command) * (strlen(sub_command) + 1));
-                    strcpy(subparser_element->sub_command, sub_command);
-                }
-                else
-                    subparser_element->sub_command = NULL;
+                subparser_element->sub_command = alloc_and_copy_string(sub_command);
                 // subparser_element->help = NULL;
-                if(help != NULL){
-                    subparser_element->help = (char*) malloc(sizeof(*help) * (strlen(help) + 1));
-                    strcpy(subparser_element->help, help);
-                }
-                else
-                    subparser_element->help = NULL;
+                subparser_element->help = alloc_and_copy_string(help);
                 subparser_element->previous = NULL;
                 subparser_element->next = NULL;
                 
@@ -343,26 +270,21 @@ namespace argparse{
              * @return Argument parser
              */
             ArgumentParser(ArgumentParser* parser){
-                this->prog = (char*) malloc(sizeof(*parser->prog) * (strlen(parser->prog) + 1));
-                this->usage = (char*) malloc(sizeof(*parser->usage) * (strlen(parser->usage) + 1));
-                this->description = (char*) malloc(sizeof(*parser->description) * (strlen(parser->description) + 1));
-                this->epilog = (char*) malloc(sizeof(*parser->epilog) * (strlen(parser->epilog) + 1));
+                this->prog = alloc_and_copy_string(parser->prog);
+                this->usage = alloc_and_copy_string(parser->usage);
+                this->description = alloc_and_copy_string(parser->description);
+                this->epilog = alloc_and_copy_string(parser->epilog);
 
-                this->prefix_chars = (char*) malloc(sizeof(char)*2);
+                this->prefix_chars = alloc_and_copy_string(parser->prefix_chars);
 
-                strcpy(this->prog, parser->prog);
-                strcpy(this->usage, parser->usage);
-                strcpy(this->description, parser->description);
-                strcpy(this->epilog, parser->epilog);
-                this->parents = NULL;
-                this->prefix_chars[0] = '-';
-                this->prefix_chars[1] = '\0';
-                this->fromfile_prefix_chars = NULL;
+                this->parents = parents;
+                // this->fromfile_prefix_chars = NULL;
+                this->fromfile_prefix_chars = alloc_and_copy_string(parser->fromfile_prefix_chars);
                 // unknown_type argument_default = {NULL};
                 // this->argument_default = argument_default;
-                this->add_help = true;
-                this->allow_abbrev = true;
-                this->exit_on_error = true;
+                this->add_help = parser->add_help;
+                this->allow_abbrev = parser->allow_abbrev;
+                this->exit_on_error = parser->exit_on_error;
 
                 this->first_argument = NULL;
                 this->last_argument = NULL;
@@ -388,17 +310,13 @@ namespace argparse{
                 const char* usage,
                 const char* description,
                 const char* epilog){
-                this->prog = (char*) malloc(sizeof(*prog) * (strlen(prog) + 1));
-                this->usage = (char*) malloc(sizeof(*usage) * (strlen(usage) + 1));
-                this->description = (char*) malloc(sizeof(*description) * (strlen(description) + 1));
-                this->epilog = (char*) malloc(sizeof(*epilog) * (strlen(epilog) + 1));
+                this->prog = alloc_and_copy_string(prog);
+                this->usage = alloc_and_copy_string(usage);
+                this->description = alloc_and_copy_string(description);
+                this->epilog = alloc_and_copy_string(epilog);
 
                 this->prefix_chars = (char*) malloc(sizeof(char)*2);
 
-                strcpy(this->prog, prog);
-                strcpy(this->usage, usage);
-                strcpy(this->description, description);
-                strcpy(this->epilog, epilog);
                 this->parents = NULL;
                 this->prefix_chars[0] = '-';
                 this->prefix_chars[1] = '\0';

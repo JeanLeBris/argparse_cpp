@@ -34,3 +34,25 @@ int print_padding_characters(int string_len, int final_length, char padding_char
 
     return 0;
 }
+
+/**
+ * Dynamically allocate a string and copy the input string in it, if input string is ```NULL```, the allocated string takes the value ```"\0"```
+ * 
+ * @param input_string String to copy
+ * 
+ * @return Copied string
+ */
+char* alloc_and_copy_string(const char* input_string){
+    char* output_string = NULL;
+    if(input_string != NULL){
+        output_string = (char*) malloc(sizeof(*input_string) * (strlen(input_string) + 1));
+        strcpy(output_string, input_string);
+    }
+    else{
+        // output_string = NULL;
+        output_string = (char*) malloc(sizeof(char) * 1);
+        output_string[0] = '\0';
+    }
+    
+    return output_string;
+}

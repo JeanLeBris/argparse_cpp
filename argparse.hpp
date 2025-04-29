@@ -3,10 +3,25 @@
 #include "./lib/utils.hpp"
 
 namespace argparse{
+    class Argument;
+    class Subparser;
+    class ArgumentParser;
+
+    ArgumentParser* declare_new_argument_parser(ArgumentParser* parser);
+
     union undefined_type{
         int integer;
         const char* const_string;
         char* string;
+    };
+
+    struct SubparserElement{
+        char* sub_command;
+        char* help;
+        ArgumentParser* parser;
+
+        SubparserElement* previous;
+        SubparserElement* next;
     };
 
     class Argument{
@@ -106,9 +121,131 @@ namespace argparse{
             }
     };
 
+    class Subparser{
+        private:
+        
+        public:
+            char* title;
+            char* description;
+            char* prog;
+            // no parser_class yet
+            char* action;
+            char* dest;
+            bool required;
+            char* help;
+            char* metavar;
+
+            ArgumentParser* parent_parser;
+
+            SubparserElement* first_parser;
+            SubparserElement* last_parser;
+
+            Subparser* previous;
+            Subparser* next;
+
+            Subparser(ArgumentParser* parent_parser,
+                      const char* title,
+                      const char* description,
+                      const char* prog,
+                      // no parser_class yet
+                      const char* action,
+                      const char* dest,
+                      bool required,
+                      const char* help,
+                      const char* metavar){
+                this->parent_parser = parent_parser;
+                if(title != NULL){
+                    this->title = (char*) malloc(sizeof(*title) * (strlen(title) + 1));
+                    strcpy(this->title, title);
+                }
+                else
+                    this->title = NULL;
+                if(description != NULL){
+                    this->description = (char*) malloc(sizeof(*description) * (strlen(description) + 1));
+                    strcpy(this->description, description);
+                }
+                else
+                    this->description = NULL;
+                if(prog != NULL){
+                    this->prog = (char*) malloc(sizeof(*prog) * (strlen(prog) + 1));
+                    strcpy(this->prog, prog);
+                }
+                else
+                    this->prog = NULL;
+                if(action != NULL){
+                    this->action = (char*) malloc(sizeof(*action) * (strlen(action) + 1));
+                    strcpy(this->action, action);
+                }
+                else
+                    this->action = NULL;
+                if(dest != NULL){
+                    this->dest = (char*) malloc(sizeof(*dest) * (strlen(dest) + 1));
+                    strcpy(this->dest, dest);
+                }
+                else
+                    this->dest = NULL;
+                this->required = required;
+                if(help != NULL){
+                    this->help = (char*) malloc(sizeof(*help) * (strlen(help) + 1));
+                    strcpy(this->help, help);
+                }
+                else
+                    this->help = NULL;
+                if(metavar != NULL){
+                    this->metavar = (char*) malloc(sizeof(*metavar) * (strlen(metavar) + 1));
+                    strcpy(this->metavar, metavar);
+                }
+                else
+                    this->metavar = NULL;
+                
+                this->first_parser = NULL;
+                this->last_parser = NULL;
+
+                this->previous = NULL;
+                this->next = NULL;
+            }
+
+            ArgumentParser* add_parser(const char* sub_command, const char* help){
+                SubparserElement* subparser_element = new SubparserElement;
+                // subparser_element->parser = new ArgumentParser(this->parent_parser);
+                subparser_element->parser = declare_new_argument_parser(this->parent_parser);
+                // subparser_element->sub_command = NULL;
+                if(sub_command != NULL){
+                    // printf(sub_command);
+                    subparser_element->sub_command = (char*) malloc(sizeof(*sub_command) * (strlen(sub_command) + 1));
+                    strcpy(subparser_element->sub_command, sub_command);
+                }
+                else
+                    subparser_element->sub_command = NULL;
+                // subparser_element->help = NULL;
+                if(help != NULL){
+                    subparser_element->help = (char*) malloc(sizeof(*help) * (strlen(help) + 1));
+                    strcpy(subparser_element->help, help);
+                }
+                else
+                    subparser_element->help = NULL;
+                subparser_element->previous = NULL;
+                subparser_element->next = NULL;
+                
+                if(this->first_parser == NULL){
+                    this->first_parser = subparser_element;
+                    this->last_parser = subparser_element;
+                }
+                else{
+                    this->last_parser->next = subparser_element;
+                    subparser_element->previous = this->last_parser;
+                    this->last_parser = subparser_element;
+                }
+
+                return subparser_element->parser;
+            }
+    };
+
     class ArgumentParser{
         // parser();
         private:
+
+        public:
             char* prog;
             char* usage;
             char* description;
@@ -127,13 +264,32 @@ namespace argparse{
             Argument* first_argument;
             Argument* last_argument;
 
+            Subparser* first_subparser;
+            Subparser* last_subparser;
+
             int arg_flags_max_length;
             int arg_default_value_max_length;
             int arg_help_max_length;
             int arg_choices_max_length;
 
-        public:
-            // // not completed yet
+            // not completed yet
+            
+            // /**
+            //  * Declares a new arguments parser
+            //  * 
+            //  * @param prog Name of the program
+            //  * @param usage Describes the usage of the program's arguments
+            //  * @param description Describes what the program does
+            //  * @param epilog Message displayed at the end of the help
+            //  * @param parents not done
+            //  * @param prefix_chars not done
+            //  * @param fromfile_prefix_chars not done
+            //  * @param add_help not done
+            //  * @param allow_abbrev not done
+            //  * @param exit_on_error not done
+            //  * 
+            //  * @return Argument parser
+            //  */
             // ArgumentParser(const char* prog,
             //                const char* usage,
             //                const char* description,
@@ -152,13 +308,72 @@ namespace argparse{
             //     this->description = (char*) malloc(sizeof(*description) * (strlen(description) + 1));
             //     this->epilog = (char*) malloc(sizeof(*epilog) * (strlen(epilog) + 1));
 
+            //     this->prefix_chars = (char*) malloc(sizeof(*prefix_chars) * (strlen(prefix_chars) + 1));
+            //     this->fromfile_prefix_chars = (char*) malloc(sizeof(*fromfile_prefix_chars) * (strlen(fromfile_prefix_chars) + 1));
+
             //     strcpy(this->prog, prog);
             //     strcpy(this->usage, usage);
             //     strcpy(this->description, description);
             //     strcpy(this->epilog, epilog);
+
+            //     strcpy(this->prefix_chars, prefix_chars);
+            //     strcpy(this->fromfile_prefix_chars, fromfile_prefix_chars);
+
+            //     this->parents = parents;
+            //     // unknown_type argument_default = {NULL};
+            //     // this->argument_default = argument_default;
+            //     this->add_help = add_help;
+            //     this->allow_abbrev = allow_abbrev;
+            //     this->exit_on_error = exit_on_error;
+
+            //     this->first_argument = NULL;
+            //     this->last_argument = NULL;
+
+            //     this->subparser = NULL;
+
+            //     // this->add_argument("-h --help", "action", 1, 0, (argparse::unknown_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
+            //     this->add_argument("-h --help", "action", 1, 0, (argparse::undefined_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
             // }
 
-            
+            /**
+             * Declares a new arguments parser
+             * 
+             * @param parser Input parser to copy
+             * 
+             * @return Argument parser
+             */
+            ArgumentParser(ArgumentParser* parser){
+                this->prog = (char*) malloc(sizeof(*parser->prog) * (strlen(parser->prog) + 1));
+                this->usage = (char*) malloc(sizeof(*parser->usage) * (strlen(parser->usage) + 1));
+                this->description = (char*) malloc(sizeof(*parser->description) * (strlen(parser->description) + 1));
+                this->epilog = (char*) malloc(sizeof(*parser->epilog) * (strlen(parser->epilog) + 1));
+
+                this->prefix_chars = (char*) malloc(sizeof(char)*2);
+
+                strcpy(this->prog, parser->prog);
+                strcpy(this->usage, parser->usage);
+                strcpy(this->description, parser->description);
+                strcpy(this->epilog, parser->epilog);
+                this->parents = NULL;
+                this->prefix_chars[0] = '-';
+                this->prefix_chars[1] = '\0';
+                this->fromfile_prefix_chars = NULL;
+                // unknown_type argument_default = {NULL};
+                // this->argument_default = argument_default;
+                this->add_help = true;
+                this->allow_abbrev = true;
+                this->exit_on_error = true;
+
+                this->first_argument = NULL;
+                this->last_argument = NULL;
+
+                this->first_subparser = NULL;
+                this->last_subparser = NULL;
+
+                // this->add_argument("-h --help", "action", 1, 0, (argparse::unknown_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
+                this->add_argument("-h --help", "action", 1, 0, (argparse::undefined_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
+            }
+
             /**
              * Declares a new arguments parser
              * 
@@ -170,9 +385,9 @@ namespace argparse{
              * @return Argument parser
              */
             ArgumentParser(const char* prog,
-                           const char* usage,
-                           const char* description,
-                           const char* epilog){
+                const char* usage,
+                const char* description,
+                const char* epilog){
                 this->prog = (char*) malloc(sizeof(*prog) * (strlen(prog) + 1));
                 this->usage = (char*) malloc(sizeof(*usage) * (strlen(usage) + 1));
                 this->description = (char*) malloc(sizeof(*description) * (strlen(description) + 1));
@@ -193,8 +408,12 @@ namespace argparse{
                 this->add_help = true;
                 this->allow_abbrev = true;
                 this->exit_on_error = true;
+
                 this->first_argument = NULL;
                 this->last_argument = NULL;
+
+                this->first_subparser = NULL;
+                this->last_subparser = NULL;
 
                 // this->add_argument("-h --help", "action", 1, 0, (argparse::unknown_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
                 this->add_argument("-h --help", "action", 1, 0, (argparse::undefined_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
@@ -248,6 +467,29 @@ namespace argparse{
                 }
                 return 0;
             }
+
+            Subparser* add_subparsers(const char* title,
+                               const char* description,
+                               const char* prog,
+                               // no parser_class yet
+                               const char* action,
+                               const char* dest,
+                               bool required,
+                               const char* help,
+                               const char* metavar){
+                Subparser* subparser = new Subparser(this, title, description, prog, action, dest, required, help, metavar);
+                if(this->first_subparser == NULL){
+                    this->first_subparser = subparser;
+                    this->last_subparser = this->first_subparser;
+                }
+                else{
+                    this->last_subparser->next = subparser;
+                    subparser->previous = this->last_subparser;
+                    this->last_subparser = subparser;
+                }
+                
+                return subparser;
+            }
             
             int print_info(){
                 printf("Prog : %s\nDesc : %s\nEpilog : %s\n", this->prog, this->description, this->epilog);
@@ -260,6 +502,10 @@ namespace argparse{
                 int arg_flags_max_length = strlen("FLAGS");
                 int arg_default_value_max_length = strlen("DEFAULT");
                 int arg_help_max_length = strlen("HELP");
+
+                int sub_flags_max_length = strlen("FLAGS");
+                int sum = 0;
+                // int sub_help_max_length = strlen("HELP");
 
                 char string_buffer[20] = "";
 
@@ -283,63 +529,128 @@ namespace argparse{
                     }
                 }
 
-                printf("\n%s\n\nUsage : %s\n\n%s\n\nArguments :\n", this->prog, this->usage, this->description);
-                printf("\tFLAGS");
-                print_padding_characters("FLAGS", arg_flags_max_length+5, ' ');
-                printf("DEFAULT");
-                print_padding_characters("DEFAULT", arg_default_value_max_length+5, ' ');
-                printf("HELP");
-                print_padding_characters("HELP", arg_help_max_length+5, ' ');
-                printf("CHOICES");
-                printf("\n");
-                for(Argument* argument = this->first_argument; argument != NULL; argument = argument->next){
-                    printf("\t%s", argument->flags);
-                    print_padding_characters(argument->flags, arg_flags_max_length+5, ' ');
-                    
-                    if(strcmp(argument->type, "string") == 0){
-                        printf("%s", argument->default_value.string);
-                        print_padding_characters(argument->default_value.string, arg_default_value_max_length+5, ' ');
-                    }
-                    else if(strcmp(argument->type, "int") == 0){
-                        printf("%d", argument->default_value.integer);
-                        itoa(argument->default_value.integer, string_buffer, 10);
-                        print_padding_characters(string_buffer, arg_default_value_max_length+5, ' ');
-                    }
-                    // printf("\t%d", sizeof(argument->choices));
-                    printf("%s", argument->help);
-                    print_padding_characters(argument->help, arg_help_max_length+5, ' ');
-                    if(argument->choices != NULL && strcmp(argument->type, "string") == 0){
-                        // printf("");
-                        for(int i = 0; i < argument->nchoices; i++){
-                            printf("%s ", argument->choices[i]);
+                printf("\n%s\n\nUsage : %s\n\n%s\n\n", this->prog, this->usage, this->description);
+
+                if(this->first_argument != NULL){
+                    printf("Arguments :\n");
+                    printf("\tFLAGS");
+                    print_padding_characters("FLAGS", arg_flags_max_length+5, ' ');
+                    printf("DEFAULT");
+                    print_padding_characters("DEFAULT", arg_default_value_max_length+5, ' ');
+                    printf("HELP");
+                    print_padding_characters("HELP", arg_help_max_length+5, ' ');
+                    printf("CHOICES");
+                    printf("\n");
+                    for(Argument* argument = this->first_argument; argument != NULL; argument = argument->next){
+                        printf("\t%s", argument->flags);
+                        print_padding_characters(argument->flags, arg_flags_max_length+5, ' ');
+                        
+                        if(strcmp(argument->type, "string") == 0){
+                            printf("%s", argument->default_value.string);
+                            print_padding_characters(argument->default_value.string, arg_default_value_max_length+5, ' ');
                         }
+                        else if(strcmp(argument->type, "int") == 0){
+                            printf("%d", argument->default_value.integer);
+                            itoa(argument->default_value.integer, string_buffer, 10);
+                            print_padding_characters(string_buffer, arg_default_value_max_length+5, ' ');
+                        }
+                        // printf("\t%d", sizeof(argument->choices));
+                        printf("%s", argument->help);
+                        print_padding_characters(argument->help, arg_help_max_length+5, ' ');
+                        if(argument->choices != NULL && strcmp(argument->type, "string") == 0){
+                            // printf("");
+                            for(int i = 0; i < argument->nchoices; i++){
+                                printf("%s ", argument->choices[i]);
+                            }
+                        }
+                        else if(argument->choices != NULL && strcmp(argument->type, "int") == 0){
+                            // printf("");
+                            for(int i = 0; i < argument->nchoices; i++){
+                                printf("%d ", argument->choices[i]);
+                            }
+                        }
+                        printf("\n");
                     }
-                    else if(argument->choices != NULL && strcmp(argument->type, "int") == 0){
-                        // printf("");
-                        for(int i = 0; i < argument->nchoices; i++){
-                            printf("%d ", argument->choices[i]);
+                    printf("\n");
+                }
+
+                for(Subparser* subparser = this->first_subparser; subparser != NULL; subparser = subparser->next){
+                    sum = 2;
+                    for(SubparserElement* subparser_element = subparser->first_parser; subparser_element != NULL; subparser_element = subparser_element->next){
+                        sum += strlen(subparser_element->sub_command)+1;
+                    }
+                    if(sum != 2){
+                        sum--;
+                    }
+
+                    if(sum > sub_flags_max_length){
+                        sub_flags_max_length = sum;
+                    }
+                }
+
+                if(this->first_subparser != NULL){
+                    printf("positional arguments:\n");
+                    printf("\tFLAGS");
+                    print_padding_characters("FLAGS", sub_flags_max_length+5, ' ');
+                    printf("HELP");
+                    printf("\n");
+                    for(Subparser* subparser = this->first_subparser; subparser != NULL; subparser = subparser->next){
+                        sum = 2;
+                        printf("\t{");
+                        for(SubparserElement* subparser_element = subparser->first_parser; subparser_element != NULL; subparser_element = subparser_element->next){
+                            printf("%s", subparser_element->sub_command);
+                            sum += strlen(subparser_element->sub_command);
+                            if(subparser_element->next != NULL){
+                                printf(",");
+                                sum++;
+                            }
+                        }
+                        printf("}");
+                        print_padding_characters(sum, sub_flags_max_length+5, ' ');
+                        printf("%s\n", subparser->help);
+
+                        for(SubparserElement* subparser_element = subparser->first_parser; subparser_element != NULL; subparser_element = subparser_element->next){
+                            printf("\t%s", subparser_element->sub_command);
+                            print_padding_characters(subparser_element->sub_command, sub_flags_max_length+5, ' ');
+                            printf("%s", subparser_element->help);
+                            printf("\n");
                         }
                     }
                     printf("\n");
                 }
-                printf("\n%s\n\n", this->epilog);
+                // if(this->subparser != NULL && this->subparser->first_parser != NULL){
+                //     // printf("%d\n", this->subparser);
+                //     // printf("%d\n", this->subparser->first_parser);
+                //     for(SubparserElement* subparser_element = this->subparser->first_parser; subparser_element != NULL; subparser_element = subparser_element->next){
+                //         printf("\t%s", subparser_element->sub_command);
+                //         print_padding_characters(subparser_element->sub_command, 10, ' ');
+                //         printf("%s", subparser_element->help);
+                //         printf("\n");
+                //     }
+                //     printf("\n");
+                // }
+                // printf("%s\n\n", this->epilog);
                 return 0;
             }
 
-            int help_with_type(){
-                printf("\n%s\n\nUsage : %s\n\n%s\n\nArguments :\n", this->prog, this->usage, this->description);
-                for(Argument* argument = this->first_argument; argument != NULL; argument = argument->next){
-                    printf("\t%s\ttype : %s\t%s", argument->flags, argument->type, argument->help);
-                    if(strcmp(argument->type, "string") == 0)
-                        printf("\tdefault : %s", argument->default_value.string);
-                    else if(strcmp(argument->type, "int") == 0)
-                        printf("\tdefault : %d", argument->default_value.integer);
-                    printf("\n");
-                }
-                printf("\n%s\n\n", this->epilog);
-                return 0;
-            }
+            // int help_with_type(){
+            //     printf("\n%s\n\nUsage : %s\n\n%s\n\nArguments :\n", this->prog, this->usage, this->description);
+            //     for(Argument* argument = this->first_argument; argument != NULL; argument = argument->next){
+            //         printf("\t%s\ttype : %s\t%s", argument->flags, argument->type, argument->help);
+            //         if(strcmp(argument->type, "string") == 0)
+            //             printf("\tdefault : %s", argument->default_value.string);
+            //         else if(strcmp(argument->type, "int") == 0)
+            //             printf("\tdefault : %d", argument->default_value.integer);
+            //         printf("\n");
+            //     }
+            //     printf("\n%s\n\n", this->epilog);
+            //     return 0;
+            // }
     };
+
+    ArgumentParser* declare_new_argument_parser(ArgumentParser* parser){
+        return new ArgumentParser(parser);
+    }
 
     // struct ArgumentParserArgs{
     //     char* prog = "Program Name";

@@ -49,9 +49,9 @@ char* alloc_and_copy_string(const char* input_string){
         strcpy(output_string, input_string);
     }
     else{
-        // output_string = NULL;
-        output_string = (char*) malloc(sizeof(char) * 1);
-        output_string[0] = '\0';
+        output_string = NULL;
+        // output_string = (char*) malloc(sizeof(char) * 1);
+        // output_string[0] = '\0';
     }
     
     return output_string;

@@ -11,6 +11,8 @@ namespace argparse{
 
     union undefined_type{
         int integer;
+        float float_value;
+        double double_value;
         const char* const_string;
         char* string;
     };
@@ -28,6 +30,7 @@ namespace argparse{
         private:
 
         public:
+            bool is_positional_argument;
             char* flags;
             char* action;
             int nargs;
@@ -45,7 +48,8 @@ namespace argparse{
             Argument* previous;
             Argument* next;
 
-            Argument(const char* flags,
+            Argument(ArgumentParser* parser,
+                     const char* flags,
                      const char* action,
                      int nargs,
                      int constant,
@@ -58,6 +62,20 @@ namespace argparse{
                      const char* metavar,
                      const char* dest,
                      bool deprecated){
+                // const char* flags_ptr = NULL;
+                if(flags == NULL){
+                    printf("Flags are necessary to declare a new argument");
+                    exit(1);
+                }
+                // flags_ptr == flags;
+                // while(*flags_ptr != '\0'){
+                //     if(strchr(parser->prefix_chars, *flags_ptr) == NULL){
+                //         printf("test");
+                //     }
+                //     while(*flags_ptr != ' ' && *flags_ptr != '\0'){
+                //         flags_ptr++;
+                //     }
+                // }
                 this->flags = alloc_and_copy_string(flags);
                 this->action = alloc_and_copy_string(action);
                 this->type = alloc_and_copy_string(type);
@@ -143,6 +161,14 @@ namespace argparse{
                 this->next = NULL;
             }
 
+            /**
+             * Add a parser to the subparser
+             * 
+             * @param sub_command Sub-command of the new parser
+             * @param help Help to display for the new parser
+             * 
+             * @return ArgumentParser
+             */
             ArgumentParser* add_parser(const char* sub_command, const char* help){
                 SubparserElement* subparser_element = new SubparserElement;
                 // subparser_element->parser = new ArgumentParser(this->parent_parser);
@@ -174,6 +200,7 @@ namespace argparse{
 
         public:
             char* prog;
+            bool is_usage_auto;
             char* usage;
             char* description;
             char* epilog;
@@ -200,67 +227,97 @@ namespace argparse{
             int arg_choices_max_length;
 
             // not completed yet
+
+            void init(const char* prog,
+                      const char* usage,
+                      const char* description,
+                      const char* epilog,
+                      ArgumentParser* parents,
+                      // formatter_class,
+                      const char* prefix_chars,
+                      const char* fromfile_prefix_chars,
+                      // unknown_type argument_default,
+                      // conflict_handler,
+                      bool add_help,
+                      bool allow_abbrev,
+                      bool exit_on_error){
+                const char* prog_reformatted = NULL;
+                if(prog == NULL){
+                    printf("A program name is necessary to produce an argument parser");
+                    exit(1);
+                }
+                for(prog_reformatted = prog + (strlen(prog) - 1); prog_reformatted != prog-1 && *prog_reformatted != '/'; prog_reformatted--);
+                prog = prog_reformatted+1;
+                for(prog_reformatted = prog + (strlen(prog) - 1); prog_reformatted != prog-1 && *prog_reformatted != '\\'; prog_reformatted--);
+                prog = prog_reformatted+1;
+                this->prog = alloc_and_copy_string(prog);
+                this->usage = alloc_and_copy_string(usage); // auto build to make
+                if(usage == NULL){
+                    this->is_usage_auto = true;
+                    this->usage = (char*) malloc(sizeof(char) * (strlen(this->prog) + 1));
+                    strcpy(this->usage, this->prog);
+                }
+                else{
+                    this->is_usage_auto = false;
+                }
+                this->description = alloc_and_copy_string(description);
+                this->epilog = alloc_and_copy_string(epilog);
+
+                // this->prefix_chars = (char*) malloc(sizeof(char)*2);
+
+                this->parents = parents;
+                this->prefix_chars = alloc_and_copy_string(prefix_chars);
+                this->fromfile_prefix_chars = alloc_and_copy_string(fromfile_prefix_chars);
+                // unknown_type argument_default = {NULL};
+                // this->argument_default = argument_default;
+                this->add_help = add_help;
+                this->allow_abbrev = allow_abbrev;
+                this->exit_on_error = exit_on_error;
+
+                this->first_argument = NULL;
+                this->last_argument = NULL;
+
+                this->first_subparser = NULL;
+                this->last_subparser = NULL;
+
+                char help_flags[20] = "";
+                sprintf(help_flags, "%ch %c%chelp", this->prefix_chars[0], this->prefix_chars[0], this->prefix_chars[0]);
+                if(this->add_help){
+                    this->add_argument(help_flags, "action", 1, 0, (argparse::undefined_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
+                }
+            }
             
-            // /**
-            //  * Declares a new arguments parser
-            //  * 
-            //  * @param prog Name of the program
-            //  * @param usage Describes the usage of the program's arguments
-            //  * @param description Describes what the program does
-            //  * @param epilog Message displayed at the end of the help
-            //  * @param parents not done
-            //  * @param prefix_chars not done
-            //  * @param fromfile_prefix_chars not done
-            //  * @param add_help not done
-            //  * @param allow_abbrev not done
-            //  * @param exit_on_error not done
-            //  * 
-            //  * @return Argument parser
-            //  */
-            // ArgumentParser(const char* prog,
-            //                const char* usage,
-            //                const char* description,
-            //                const char* epilog,
-            //                ArgumentParser* parents,
-            //                // formatter_class,
-            //                const char* prefix_chars,
-            //                const char* fromfile_prefix_chars,
-            //                // unknown_type argument_default,
-            //                // conflict_handler,
-            //                bool add_help,
-            //                bool allow_abbrev,
-            //                bool exit_on_error){
-            //     this->prog = (char*) malloc(sizeof(*prog) * (strlen(prog) + 1));
-            //     this->usage = (char*) malloc(sizeof(*usage) * (strlen(usage) + 1));
-            //     this->description = (char*) malloc(sizeof(*description) * (strlen(description) + 1));
-            //     this->epilog = (char*) malloc(sizeof(*epilog) * (strlen(epilog) + 1));
-
-            //     this->prefix_chars = (char*) malloc(sizeof(*prefix_chars) * (strlen(prefix_chars) + 1));
-            //     this->fromfile_prefix_chars = (char*) malloc(sizeof(*fromfile_prefix_chars) * (strlen(fromfile_prefix_chars) + 1));
-
-            //     strcpy(this->prog, prog);
-            //     strcpy(this->usage, usage);
-            //     strcpy(this->description, description);
-            //     strcpy(this->epilog, epilog);
-
-            //     strcpy(this->prefix_chars, prefix_chars);
-            //     strcpy(this->fromfile_prefix_chars, fromfile_prefix_chars);
-
-            //     this->parents = parents;
-            //     // unknown_type argument_default = {NULL};
-            //     // this->argument_default = argument_default;
-            //     this->add_help = add_help;
-            //     this->allow_abbrev = allow_abbrev;
-            //     this->exit_on_error = exit_on_error;
-
-            //     this->first_argument = NULL;
-            //     this->last_argument = NULL;
-
-            //     this->subparser = NULL;
-
-            //     // this->add_argument("-h --help", "action", 1, 0, (argparse::unknown_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
-            //     this->add_argument("-h --help", "action", 1, 0, (argparse::undefined_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
-            // }
+            /**
+             * Declares a new arguments parser
+             * 
+             * @param prog Name of the program
+             * @param usage Describes the usage of the program's arguments
+             * @param description Describes what the program does
+             * @param epilog Message displayed at the end of the help
+             * @param parents not done
+             * @param prefix_chars not done
+             * @param fromfile_prefix_chars not done
+             * @param add_help not done
+             * @param allow_abbrev not done
+             * @param exit_on_error not done
+             * 
+             * @return Argument parser
+             */
+            ArgumentParser(const char* prog,
+                           const char* usage,
+                           const char* description,
+                           const char* epilog,
+                           ArgumentParser* parents,
+                           // formatter_class,
+                           const char* prefix_chars,
+                           const char* fromfile_prefix_chars,
+                           // unknown_type argument_default,
+                           // conflict_handler,
+                           bool add_help,
+                           bool allow_abbrev,
+                           bool exit_on_error){
+                init(prog, usage, description, epilog, parents, prefix_chars, fromfile_prefix_chars, add_help, allow_abbrev, exit_on_error);
+            }
 
             /**
              * Declares a new arguments parser
@@ -270,30 +327,12 @@ namespace argparse{
              * @return Argument parser
              */
             ArgumentParser(ArgumentParser* parser){
-                this->prog = alloc_and_copy_string(parser->prog);
-                this->usage = alloc_and_copy_string(parser->usage);
-                this->description = alloc_and_copy_string(parser->description);
-                this->epilog = alloc_and_copy_string(parser->epilog);
-
-                this->prefix_chars = alloc_and_copy_string(parser->prefix_chars);
-
-                this->parents = parents;
-                // this->fromfile_prefix_chars = NULL;
-                this->fromfile_prefix_chars = alloc_and_copy_string(parser->fromfile_prefix_chars);
-                // unknown_type argument_default = {NULL};
-                // this->argument_default = argument_default;
-                this->add_help = parser->add_help;
-                this->allow_abbrev = parser->allow_abbrev;
-                this->exit_on_error = parser->exit_on_error;
-
-                this->first_argument = NULL;
-                this->last_argument = NULL;
-
-                this->first_subparser = NULL;
-                this->last_subparser = NULL;
-
-                // this->add_argument("-h --help", "action", 1, 0, (argparse::unknown_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
-                this->add_argument("-h --help", "action", 1, 0, (argparse::undefined_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
+                if(parser->is_usage_auto){
+                    init(parser->prog, NULL, parser->description, parser->epilog, parser, parser->prefix_chars, parser->fromfile_prefix_chars, parser->add_help, parser->allow_abbrev, parser->exit_on_error);
+                }
+                else{
+                    init(parser->prog, parser->usage, parser->description, parser->epilog, parser, parser->prefix_chars, parser->fromfile_prefix_chars, parser->add_help, parser->allow_abbrev, parser->exit_on_error);
+                }
             }
 
             /**
@@ -307,38 +346,14 @@ namespace argparse{
              * @return Argument parser
              */
             ArgumentParser(const char* prog,
-                const char* usage,
-                const char* description,
-                const char* epilog){
-                this->prog = alloc_and_copy_string(prog);
-                this->usage = alloc_and_copy_string(usage);
-                this->description = alloc_and_copy_string(description);
-                this->epilog = alloc_and_copy_string(epilog);
-
-                this->prefix_chars = (char*) malloc(sizeof(char)*2);
-
-                this->parents = NULL;
-                this->prefix_chars[0] = '-';
-                this->prefix_chars[1] = '\0';
-                this->fromfile_prefix_chars = NULL;
-                // unknown_type argument_default = {NULL};
-                // this->argument_default = argument_default;
-                this->add_help = true;
-                this->allow_abbrev = true;
-                this->exit_on_error = true;
-
-                this->first_argument = NULL;
-                this->last_argument = NULL;
-
-                this->first_subparser = NULL;
-                this->last_subparser = NULL;
-
-                // this->add_argument("-h --help", "action", 1, 0, (argparse::unknown_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
-                this->add_argument("-h --help", "action", 1, 0, (argparse::undefined_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
+                           const char* usage,
+                           const char* description,
+                           const char* epilog){
+                init(prog, usage, description, epilog, NULL, "-", NULL, true, true, true);
             }
 
             /**
-             * Add a new argument at the argument parser
+             * Add a new argument to the argument parser
              * 
              * @param flags The flags of the argument, separated by spaces
              * @param action The basic of action to be taken when this argument is encountered at the command line
@@ -368,10 +383,7 @@ namespace argparse{
                              const char* metavar,
                              const char* dest,
                              bool deprecated){
-                // Argument* argument = new Argument(flags, action, nargs, constant, default_value, type, nchoices, choices,
-                //                                   required, help, metavar, dest, deprecated);
-                // printf("%d\n", sizeof(choices));
-                Argument* argument = new Argument(flags, action, nargs, constant, default_value, type, nchoices, choices,
+                Argument* argument = new Argument(this, flags, action, nargs, constant, default_value, type, nchoices, choices,
                                                   required, help, metavar, dest, deprecated);
                 
                 if(this->first_argument == NULL){
@@ -383,18 +395,58 @@ namespace argparse{
                     argument->previous = this->last_argument;
                     this->last_argument = argument;
                 }
+
+                // TODO Update the usage modifier to make it ok (not really ok rn)
+                char* usage_buffer = NULL;
+                char* flag = NULL;
+                int flag_size = 0;
+                if(this->is_usage_auto){
+                    usage_buffer = this->usage;
+                    for(flag_size = 0; flag_size < strlen(flags) && flags[flag_size] != ' '; flag_size++);
+                    flag = (char*) malloc(sizeof(char) * (flag_size + 1));
+                    for(flag_size = 0; flag_size < strlen(flags) && flags[flag_size] != ' '; flag_size++){
+                        flag[flag_size] = flags[flag_size];
+                    }
+                    flag[flag_size] = '\0';
+                    // strcpy_s(flag, flag_size, usage_buffer);
+                    if(required){
+                        this->usage = (char*) malloc(sizeof(char) * (strlen(usage_buffer) + flag_size + 1));
+                        sprintf(this->usage, "%s %s", usage_buffer, flag);
+                    }
+                    else{
+                        this->usage = (char*) malloc(sizeof(char) * (strlen(usage_buffer) + flag_size + 3));
+                        sprintf(this->usage, "%s [%s]", usage_buffer, flag);
+                    }
+                    free(usage_buffer);
+                    free(flag);
+                }
+
                 return 0;
             }
 
+            /**
+             * Adds a new subparser to the argument parser
+             * 
+             * @param title Title for the sub-parser group in help output
+             * @param description Description for the sub-parser group in help output
+             * @param prog Usage information that will be displayed with sub-command help
+             * @param action The basic type of action to be taken when this argument is encountered at the command line
+             * @param dest Name of the attribute under which sub-command name will be stored
+             * @param required Whether or not a subcommand must be provided
+             * @param help Help for sub-parser group in help output
+             * @param metavar String presenting available subcommands in help
+             * 
+             * @return Subparser
+             */
             Subparser* add_subparsers(const char* title,
-                               const char* description,
-                               const char* prog,
-                               // no parser_class yet
-                               const char* action,
-                               const char* dest,
-                               bool required,
-                               const char* help,
-                               const char* metavar){
+                                      const char* description,
+                                      const char* prog,
+                                      // no parser_class yet
+                                      const char* action,
+                                      const char* dest,
+                                      bool required,
+                                      const char* help,
+                                      const char* metavar){
                 Subparser* subparser = new Subparser(this, title, description, prog, action, dest, required, help, metavar);
                 if(this->first_subparser == NULL){
                     this->first_subparser = subparser;
@@ -409,13 +461,16 @@ namespace argparse{
                 return subparser;
             }
             
-            int print_info(){
-                printf("Prog : %s\nDesc : %s\nEpilog : %s\n", this->prog, this->description, this->epilog);
-                printf("Prog : %d\nDesc : %d\nEpilog : %d\n", strlen(this->prog), strlen(this->description), strlen(this->epilog));
+            // int print_info(){
+            //     printf("Prog : %s\nDesc : %s\nEpilog : %s\n", this->prog, this->description, this->epilog);
+            //     printf("Prog : %d\nDesc : %d\nEpilog : %d\n", strlen(this->prog), strlen(this->description), strlen(this->epilog));
 
-                return 0;
-            }
+            //     return 0;
+            // }
 
+            /**
+             * Display the argument parser's help
+             */
             int help(){
                 int arg_flags_max_length = strlen("FLAGS");
                 int arg_default_value_max_length = strlen("DEFAULT");
@@ -447,10 +502,14 @@ namespace argparse{
                     }
                 }
 
-                printf("\n%s\n\nUsage : %s\n\n%s\n\n", this->prog, this->usage, this->description);
+                printf("\nusage : %s\n\n", this->usage);
+
+                if(this->description != NULL){
+                    printf("%s\n\n", this->description);
+                }
 
                 if(this->first_argument != NULL){
-                    printf("Arguments :\n");
+                    printf("options :\n");
                     printf("\tFLAGS");
                     print_padding_characters("FLAGS", arg_flags_max_length+5, ' ');
                     printf("DEFAULT");
@@ -547,7 +606,11 @@ namespace argparse{
                 //     }
                 //     printf("\n");
                 // }
-                // printf("%s\n\n", this->epilog);
+
+                if(this->epilog != NULL){
+                    printf("%s\n\n", this->epilog);
+                }
+
                 return 0;
             }
 

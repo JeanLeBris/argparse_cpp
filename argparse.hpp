@@ -13,7 +13,7 @@ namespace argparse{
         int integer;
         float float_value;
         double double_value;
-        const char* const_string;
+        // const char* const_string;
         char* string;
     };
 
@@ -34,7 +34,7 @@ namespace argparse{
             char* flags;
             char* action;
             int nargs;
-            int constant;
+            undefined_type constant;
             undefined_type default_value;
             char* type;
             int nchoices;
@@ -48,7 +48,7 @@ namespace argparse{
             Argument* previous;
             Argument* next;
 
-            Argument(ArgumentParser* parser, const char* flags, const char* action, int nargs, int constant, undefined_type default_value, const char* type, int nchoices, undefined_type* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
+            Argument(ArgumentParser* parser, const char* flags, const char* action, int nargs, undefined_type constant, undefined_type default_value, const char* type, int nchoices, undefined_type* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
     };
 
     class Subparser{
@@ -117,7 +117,11 @@ namespace argparse{
 
             ArgumentParser(const char* prog, const char* usage, const char* description, const char* epilog);
 
-            int add_argument(const char* flags, const char* action, int nargs, int constant, undefined_type default_value, const char* type, int nchoices, undefined_type* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
+            int add_argument(const char* flags, const char* action, int nargs, undefined_type constant, undefined_type default_value, const char* type, int nchoices, undefined_type* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
+
+            int add_argument(const char* flags, const char* action, int nargs, int constant, int default_value, const char* type, int nchoices, int* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
+
+            int add_argument(const char* flags, const char* action, int nargs, const char* constant, const char* default_value, const char* type, int nchoices, const char* choices[], bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
 
             Subparser* add_subparsers(const char* title, const char* description, const char* prog, const char* action, const char* dest, bool required, const char* help, const char* metavar); // no parser_class yet
             
@@ -138,7 +142,7 @@ namespace argparse{
                        const char* flags,
                        const char* action,
                        int nargs,
-                       int constant,
+                       undefined_type constant,
                        undefined_type default_value,
                        const char* type,
                        int nchoices,
@@ -148,49 +152,74 @@ namespace argparse{
                        const char* metavar,
                        const char* dest,
                        bool deprecated){
-        // const char* flags_ptr = NULL;
         if(flags == NULL){
             printf("Flags are necessary to declare a new argument");
             exit(1);
         }
-        // flags_ptr == flags;
-        // while(*flags_ptr != '\0'){
-        //     if(strchr(parser->prefix_chars, *flags_ptr) == NULL){
-        //         printf("test");
-        //     }
-        //     while(*flags_ptr != ' ' && *flags_ptr != '\0'){
-        //         flags_ptr++;
-        //     }
-        // }
-        this->flags = alloc_and_copy_string(flags);
-        this->action = alloc_and_copy_string(action);
-        this->type = alloc_and_copy_string(type);
-        if(type != NULL){
-            if(strcmp(type, "int") == 0){
-                this->default_value.integer = default_value.integer;
+        this->is_positional_argument = false;
+        for(int i = 0; i < strlen(flags); i++){
+            if(strchr(parser->prefix_chars, flags[i]) == NULL){
+                this->is_positional_argument = true;
             }
-            else if(strcmp(type, "string") == 0){
-                if(default_value.const_string != NULL){
-                    // this->default_value.string = (char*) malloc(sizeof(*default_value.const_string) * (strlen(default_value.const_string) + 1));
-                    // strcpy(this->default_value.string, default_value.const_string);
-                    this->default_value.string = alloc_and_copy_string(default_value.const_string);
-                }
+            while(flags[i] != ' ' && flags[i] != '\0'){
+                i++;
             }
         }
-        else
-            this->type = NULL;
+        if(this->is_positional_argument && strchr(flags, ' ') != NULL){
+            printf("A positional argument can only have one flag\n");
+            exit(1);
+        }
+        this->flags = alloc_and_copy_string(flags);
+        this->action = alloc_and_copy_string(action);
+        if(this->action == NULL){
+            this->action = alloc_and_copy_string("store");
+        }
+        if(strcmp(this->action, "store") == 0){
+            
+        }
+        else if(strcmp(this->action, "store_const") == 0){
+            
+        }
+        else if(strcmp(this->action, "store_true") == 0){
+            
+        }
+        else if(strcmp(this->action, "store_false") == 0){
+            
+        }
+        else if(strcmp(this->action, "append") == 0){
+            
+        }
+        else if(strcmp(this->action, "append_const") == 0){
+            
+        }
+        else if(strcmp(this->action, "extend") == 0){
+            
+        }
+        else if(strcmp(this->action, "count") == 0){
+            
+        }
+        else if(strcmp(this->action, "help") == 0){
+            
+        }
+        else if(strcmp(this->action, "version") == 0){
+            
+        }
+        else{
+            printf("The action argument value must be a correct value or none at all");
+            exit(1);
+        }
+        this->nargs = nargs;
+        this->constant = constant;
+        this->default_value = default_value;
+        this->type = alloc_and_copy_string(type);
+        // this->nchoices = nchoices;
+        // no choices management for now
         this->nchoices = nchoices;
-        // this->choices = (char**) malloc(sizeof(*choices) * nchoices);
-        this->choices = choices;    // Won't work with a static input
+        this->choices = choices;
+        this->required = required;
         this->help = alloc_and_copy_string(help);
         this->metavar = alloc_and_copy_string(metavar);
         this->dest = alloc_and_copy_string(dest);
-
-        this->nargs = nargs;
-        this->constant = constant;
-        // this->nchoices = nchoices;
-        // no choices management for now
-        this->required = required;
         this->deprecated = deprecated;
 
         this->previous = NULL;
@@ -311,7 +340,7 @@ namespace argparse{
         char help_flags[20] = "";
         sprintf(help_flags, "%ch %c%chelp", this->prefix_chars[0], this->prefix_chars[0], this->prefix_chars[0]);
         if(this->add_help){
-            this->add_argument(help_flags, "action", 1, 0, (argparse::undefined_type) {.integer = 0}, "int", 0, NULL, true, "display the help of the program", "metavar", NULL, 0);
+            this->add_argument(help_flags, "help", 1, 0, 0, "int", 0, NULL, false, "display the help of the program", "metavar", NULL, 0);
         }
     }
 
@@ -401,7 +430,7 @@ namespace argparse{
     int ArgumentParser::add_argument(const char* flags,
                                      const char* action,
                                      int nargs,
-                                     int constant,
+                                     undefined_type constant,
                                      undefined_type default_value,
                                      const char* type,
                                      int nchoices,
@@ -452,6 +481,96 @@ namespace argparse{
         return 0;
     }
 
+    /**
+     * Add a new argument to the argument parser
+     * 
+     * @param flags The flags of the argument, separated by spaces
+     * @param action The basic of action to be taken when this argument is encountered at the command line
+     * @param nargs The number of command-line arguments that should be consumed
+     * @param constant A constant value required by some ```action``` and ```nargs``` selections
+     * @param default_value The value produced if the argument is absent from the command line and if it is absent from the namespace object
+     * @param type The type to which the command-line argument should be converted
+     * @param choices A sequence of the allowable values for the argument
+     * @param required Whether or not the command-line option may be omitted
+     * @param help A brief description of what the argument does
+     * @param metavar A name for the argument in usage messages
+     * @param dest The name of the attribute to be added to the object returned by ```parse_args()```
+     * @param deprecated Whether or not use of the argument is deprecated
+     * 
+     * @return 0 if all goes well
+     */
+    int ArgumentParser::add_argument(const char* flags,
+                                     const char* action,
+                                     int nargs,
+                                     int constant,
+                                     int default_value,
+                                     const char* type,
+                                     int nchoices,
+                                     int* choices,
+                                     bool required,
+                                     const char* help,
+                                     const char* metavar,
+                                     const char* dest,
+                                     bool deprecated){
+        undefined_type casted_constant = {.integer = constant};
+        undefined_type casted_default_value = {.integer = default_value};
+        undefined_type* casted_choices = NULL;
+        if(nchoices > 0){
+            casted_choices = (undefined_type*) malloc(sizeof(undefined_type) * nchoices);
+            for(int i = 0; i < nchoices; i++){
+                casted_choices[i] = {.integer = choices[i]};
+            }
+        }
+        int result = this->add_argument(flags, action, nargs, casted_constant, casted_default_value, type, nchoices, casted_choices, required, help, metavar, dest, deprecated);
+        
+        return result;
+    }
+    
+    /**
+     * Add a new argument to the argument parser
+     * 
+     * @param flags The flags of the argument, separated by spaces
+     * @param action The basic of action to be taken when this argument is encountered at the command line
+     * @param nargs The number of command-line arguments that should be consumed
+     * @param constant A constant value required by some ```action``` and ```nargs``` selections
+     * @param default_value The value produced if the argument is absent from the command line and if it is absent from the namespace object
+     * @param type The type to which the command-line argument should be converted
+     * @param choices A sequence of the allowable values for the argument
+     * @param required Whether or not the command-line option may be omitted
+     * @param help A brief description of what the argument does
+     * @param metavar A name for the argument in usage messages
+     * @param dest The name of the attribute to be added to the object returned by ```parse_args()```
+     * @param deprecated Whether or not use of the argument is deprecated
+     * 
+     * @return 0 if all goes well
+     */
+    int ArgumentParser::add_argument(const char* flags,
+                                     const char* action,
+                                     int nargs,
+                                     const char* constant,
+                                     const char* default_value,
+                                     const char* type,
+                                     int nchoices,
+                                     const char* choices[],
+                                     bool required,
+                                     const char* help,
+                                     const char* metavar,
+                                     const char* dest,
+                                     bool deprecated){
+        undefined_type casted_constant = {.string = alloc_and_copy_string(constant)};
+        undefined_type casted_default_value = {.string = alloc_and_copy_string(default_value)};
+        undefined_type* casted_choices = NULL;
+        if(nchoices > 0){
+            casted_choices = (undefined_type*) malloc(sizeof(undefined_type) * nchoices);
+            for(int i = 0; i < nchoices; i++){
+                casted_choices[i] = {.string = alloc_and_copy_string(choices[i])};
+            }
+        }
+        int result = this->add_argument(flags, action, nargs, casted_constant, casted_default_value, type, nchoices, casted_choices, required, help, metavar, dest, deprecated);
+        
+        return result;
+    }
+    
     /**
      * Adds a new subparser to the argument parser
      * 

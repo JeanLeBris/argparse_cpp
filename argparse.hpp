@@ -7,8 +7,6 @@ namespace argparse{
     class Subparser;
     class ArgumentParser;
 
-    ArgumentParser* declare_new_argument_parser(ArgumentParser* parser);
-
     union undefined_type{
         int integer;
         float float_value;
@@ -127,10 +125,6 @@ namespace argparse{
             
             int help();
     };
-
-    ArgumentParser* declare_new_argument_parser(ArgumentParser* parser){
-        return new ArgumentParser(parser);
-    }
 
     // struct ArgumentParserArgs{
     //     char* prog = "Program Name";
@@ -263,8 +257,7 @@ namespace argparse{
     */
     ArgumentParser* Subparser::add_parser(const char* sub_command, const char* help){
         SubparserElement* subparser_element = new SubparserElement;
-        // subparser_element->parser = new ArgumentParser(this->parent_parser);
-        subparser_element->parser = declare_new_argument_parser(this->parent_parser);
+        subparser_element->parser = new ArgumentParser(this->parent_parser);
         // subparser_element->sub_command = NULL;
         subparser_element->sub_command = alloc_and_copy_string(sub_command);
         // subparser_element->help = NULL;

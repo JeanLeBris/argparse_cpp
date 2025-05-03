@@ -11,8 +11,13 @@
  * @return 0 if the function worked as intended
  */
 int print_padding_characters(const char* string, int final_length, char padding_character){
-    for(int i = strlen(string); i < final_length; i++){
-        printf("%c", padding_character);
+    if(string != NULL){
+        for(int i = strlen(string); i < final_length; i++){
+            printf("%c", padding_character);
+        }
+    }
+    else{
+        print_padding_characters("(null)", final_length, padding_character);
     }
 
     return 0;

@@ -8,11 +8,12 @@ namespace argparse{
     class ArgumentParser;
 
     union undefined_type{
+        bool boolean;
         int integer;
         float float_value;
         double double_value;
-        // const char* const_string;
         char* string;
+        undefined_type* undefined_object;
     };
 
     struct SubparserElement{
@@ -22,6 +23,12 @@ namespace argparse{
 
         SubparserElement* previous;
         SubparserElement* next;
+    };
+
+    struct ParsedArguments{
+        char** keys;
+        undefined_type* values;
+        int* number_of_values;
     };
 
     class Argument{
@@ -90,6 +97,7 @@ namespace argparse{
             // no formatter class yet
             char* prefix_chars;
             char* fromfile_prefix_chars;
+            char* version;
             // no argument_default yet
             // no conflict_handler yet
             bool add_help;
@@ -107,9 +115,9 @@ namespace argparse{
             int arg_help_max_length;
             int arg_choices_max_length;
 
-            void init(const char* prog, const char* usage, const char* description, const char* epilog, ArgumentParser* parents, const char* prefix_chars, const char* fromfile_prefix_chars, bool add_help, bool allow_abbrev, bool exit_on_error); // no formatter_class, argument_default or conflict_handler yet
+            void init(const char* prog, const char* usage, const char* description, const char* epilog, ArgumentParser* parents, const char* prefix_chars, const char* fromfile_prefix_chars, const char* version, bool add_help, bool allow_abbrev, bool exit_on_error); // no formatter_class, argument_default or conflict_handler yet
             
-            ArgumentParser(const char* prog, const char* usage, const char* description, const char* epilog, ArgumentParser* parents, const char* prefix_chars, const char* fromfile_prefix_chars, bool add_help, bool allow_abbrev, bool exit_on_error); // no formatter_class, argument_default or conflict_handler yet
+            ArgumentParser(const char* prog, const char* usage, const char* description, const char* epilog, ArgumentParser* parents, const char* prefix_chars, const char* fromfile_prefix_chars, const char* version, bool add_help, bool allow_abbrev, bool exit_on_error); // no formatter_class, argument_default or conflict_handler yet
 
             ArgumentParser(ArgumentParser* parser);
 
@@ -123,7 +131,11 @@ namespace argparse{
 
             Subparser* add_subparsers(const char* title, const char* description, const char* prog, const char* action, const char* dest, bool required, const char* help, const char* metavar); // no parser_class yet
             
-            int help();
+            ParsedArguments parse_args(int argc, char** argv);
+
+            int print_help();
+
+            int print_version();
     };
 
     // struct ArgumentParserArgs{
@@ -146,6 +158,7 @@ namespace argparse{
                        const char* metavar,
                        const char* dest,
                        bool deprecated){
+        bool store_true_false = false;
         if(flags == NULL){
             printf("Flags are necessary to declare a new argument");
             exit(1);
@@ -175,23 +188,33 @@ namespace argparse{
             
         }
         else if(strcmp(this->action, "store_true") == 0){
-            
+            free(this->action);
+            this->action = alloc_and_copy_string("store_const");
+            this->default_value.boolean = false;
+            this->constant.boolean = true;
+            store_true_false = true;
+            this->type = alloc_and_copy_string("bool");
         }
         else if(strcmp(this->action, "store_false") == 0){
-            
+            free(this->action);
+            this->action = alloc_and_copy_string("store_const");
+            this->default_value.boolean = true;
+            this->constant.boolean = false;
+            store_true_false = true;
+            this->type = alloc_and_copy_string("bool");
         }
-        else if(strcmp(this->action, "append") == 0){
+        // else if(strcmp(this->action, "append") == 0){
             
-        }
-        else if(strcmp(this->action, "append_const") == 0){
+        // }
+        // else if(strcmp(this->action, "append_const") == 0){
             
-        }
-        else if(strcmp(this->action, "extend") == 0){
+        // }
+        // else if(strcmp(this->action, "extend") == 0){
             
-        }
-        else if(strcmp(this->action, "count") == 0){
+        // }
+        // else if(strcmp(this->action, "count") == 0){
             
-        }
+        // }
         else if(strcmp(this->action, "help") == 0){
             
         }
@@ -203,9 +226,11 @@ namespace argparse{
             exit(1);
         }
         this->nargs = nargs;
-        this->constant = constant;
-        this->default_value = default_value;
-        this->type = alloc_and_copy_string(type);
+        if(!store_true_false){
+            this->constant = constant;
+            this->default_value = default_value;
+            this->type = alloc_and_copy_string(type);
+        }
         // this->nchoices = nchoices;
         // no choices management for now
         this->nchoices = nchoices;
@@ -259,6 +284,10 @@ namespace argparse{
         SubparserElement* subparser_element = new SubparserElement;
         subparser_element->parser = new ArgumentParser(this->parent_parser);
         // subparser_element->sub_command = NULL;
+        if(sub_command == NULL){
+            printf("To add a parser to a sub-parser, a sub-command is necessary");
+            exit(1);
+        }
         subparser_element->sub_command = alloc_and_copy_string(sub_command);
         // subparser_element->help = NULL;
         subparser_element->help = alloc_and_copy_string(help);
@@ -286,6 +315,7 @@ namespace argparse{
                               // formatter_class,
                               const char* prefix_chars,
                               const char* fromfile_prefix_chars,
+                              const char* version,
                               // unknown_type argument_default,
                               // conflict_handler,
                               bool add_help,
@@ -318,6 +348,7 @@ namespace argparse{
         this->parents = parents;
         this->prefix_chars = alloc_and_copy_string(prefix_chars);
         this->fromfile_prefix_chars = alloc_and_copy_string(fromfile_prefix_chars);
+        this->version = alloc_and_copy_string(version);
         // unknown_type argument_default = {NULL};
         // this->argument_default = argument_default;
         this->add_help = add_help;
@@ -347,6 +378,7 @@ namespace argparse{
      * @param parents not done
      * @param prefix_chars not done
      * @param fromfile_prefix_chars not done
+     * @param version Version of the program
      * @param add_help not done
      * @param allow_abbrev not done
      * @param exit_on_error not done
@@ -361,12 +393,13 @@ namespace argparse{
                                    // formatter_class,
                                    const char* prefix_chars,
                                    const char* fromfile_prefix_chars,
+                                   const char* version,
                                    // unknown_type argument_default,
                                    // conflict_handler,
                                    bool add_help,
                                    bool allow_abbrev,
                                    bool exit_on_error){
-        init(prog, usage, description, epilog, parents, prefix_chars, fromfile_prefix_chars, add_help, allow_abbrev, exit_on_error);
+        init(prog, usage, description, epilog, parents, prefix_chars, fromfile_prefix_chars, version, add_help, allow_abbrev, exit_on_error);
     }
 
     /**
@@ -378,10 +411,10 @@ namespace argparse{
      */
     ArgumentParser::ArgumentParser(ArgumentParser* parser){
         if(parser->is_usage_auto){
-            init(parser->prog, NULL, parser->description, parser->epilog, parser, parser->prefix_chars, parser->fromfile_prefix_chars, parser->add_help, parser->allow_abbrev, parser->exit_on_error);
+            init(parser->prog, NULL, parser->description, parser->epilog, parser, parser->prefix_chars, parser->fromfile_prefix_chars, parser->version, parser->add_help, parser->allow_abbrev, parser->exit_on_error);
         }
         else{
-            init(parser->prog, parser->usage, parser->description, parser->epilog, parser, parser->prefix_chars, parser->fromfile_prefix_chars, parser->add_help, parser->allow_abbrev, parser->exit_on_error);
+            init(parser->prog, parser->usage, parser->description, parser->epilog, parser, parser->prefix_chars, parser->fromfile_prefix_chars, parser->version, parser->add_help, parser->allow_abbrev, parser->exit_on_error);
         }
     }
 
@@ -399,7 +432,7 @@ namespace argparse{
                                    const char* usage,
                                    const char* description,
                                    const char* epilog){
-        init(prog, usage, description, epilog, NULL, "-", NULL, true, true, true);
+        init(prog, usage, description, epilog, NULL, "-", NULL, "0.0.0", true, true, true);
     }
 
     /**
@@ -602,9 +635,23 @@ namespace argparse{
     }
 
     /**
+     * Parse arguments
+     * 
+     * @param argc The amount of arguments
+     * @param argv The arguments
+     * 
+     * @return The parsed arguments
+     */
+    ParsedArguments parse_args(int argc, char** argv){
+        ParsedArguments parsed_args;
+
+        return parsed_args;
+    }
+
+    /**
      * Display the argument parser's help
      */
-    int ArgumentParser::help(){
+    int ArgumentParser::print_help(){
         int arg_flags_max_length = strlen("FLAGS");
         int arg_default_value_max_length = strlen("DEFAULT");
         int arg_help_max_length = strlen("HELP");
@@ -620,7 +667,7 @@ namespace argparse{
                 arg_flags_max_length = strlen(argument->flags);
             }
             if(strcmp(argument->type, "string") == 0){
-                if(strlen(argument->default_value.string) > arg_default_value_max_length){
+                if(argument->default_value.string != NULL && strlen(argument->default_value.string) > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(argument->default_value.string);
                 }
             }
@@ -628,6 +675,11 @@ namespace argparse{
                 itoa(argument->default_value.integer, string_buffer, 10);
                 if(strlen(string_buffer) > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(string_buffer);
+                }
+            }
+            else if(strcmp(argument->type, "bool") == 0){
+                if(strlen(argument->default_value.boolean ? "True" : "False") > arg_default_value_max_length){
+                    arg_default_value_max_length = strlen(argument->default_value.boolean ? "True" : "False");
                 }
             }
             if(strlen(argument->help) > arg_help_max_length){
@@ -663,6 +715,10 @@ namespace argparse{
                     printf("%d", argument->default_value.integer);
                     itoa(argument->default_value.integer, string_buffer, 10);
                     print_padding_characters(string_buffer, arg_default_value_max_length+5, ' ');
+                }
+                else if(strcmp(argument->type, "bool") == 0){
+                    printf(argument->default_value.boolean ? "True" : "False");
+                    print_padding_characters(argument->default_value.boolean ? "True" : "False", arg_default_value_max_length+5, ' ');
                 }
                 // printf("\t%d", sizeof(argument->choices));
                 printf("%s", argument->help);
@@ -717,33 +773,27 @@ namespace argparse{
                 }
                 printf("}");
                 print_padding_characters(sum, sub_flags_max_length+5, ' ');
-                printf("%s\n", subparser->help);
+                printf("%s\n", subparser->help != NULL ? subparser->help : "      ");
 
                 for(SubparserElement* subparser_element = subparser->first_parser; subparser_element != NULL; subparser_element = subparser_element->next){
                     printf("\t%s", subparser_element->sub_command);
                     print_padding_characters(subparser_element->sub_command, sub_flags_max_length+5, ' ');
-                    printf("%s", subparser_element->help);
+                    printf("%s", subparser_element->help != NULL ? subparser_element->help : "      ");
                     printf("\n");
                 }
             }
             printf("\n");
         }
-        // if(this->subparser != NULL && this->subparser->first_parser != NULL){
-        //     // printf("%d\n", this->subparser);
-        //     // printf("%d\n", this->subparser->first_parser);
-        //     for(SubparserElement* subparser_element = this->subparser->first_parser; subparser_element != NULL; subparser_element = subparser_element->next){
-        //         printf("\t%s", subparser_element->sub_command);
-        //         print_padding_characters(subparser_element->sub_command, 10, ' ');
-        //         printf("%s", subparser_element->help);
-        //         printf("\n");
-        //     }
-        //     printf("\n");
-        // }
 
         if(this->epilog != NULL){
             printf("%s\n\n", this->epilog);
         }
 
+        return 0;
+    }
+
+    int ArgumentParser::print_version(){
+        printf("%s %s\n", this->prog, this->version);
         return 0;
     }
 

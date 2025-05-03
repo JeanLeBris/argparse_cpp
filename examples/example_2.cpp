@@ -14,5 +14,5 @@ int main(int argc, char** argv){
     printf("#\n");
     print_padding_characters(0, 80, '#');
     printf("\n");
-    parser.help();
+    parser.print_help();
 }

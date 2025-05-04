@@ -1,0 +1,3 @@
+look for subparsers's parsers recursively then stop
+keep a list of them
+read the list in reverse and process arguments

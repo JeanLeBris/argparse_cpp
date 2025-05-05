@@ -2,9 +2,9 @@
 
 The objective of argparse_cpp is to reproduce the python argparse library for C++.
 
-The library is not usable yet.
+The library is (somewhat) usable, but very buggy.
 
-Right now, the library can parse subparsers and parse the default values of arguments.
+Float and Double arguments won't work.
 
 Compared to its python counterpart there are some differences:
 - The program's version is not given to a "version" ```add_argument()``` method call, it is given to the initial ```ArgumentParser``` declaration.

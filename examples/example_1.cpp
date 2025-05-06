@@ -16,13 +16,25 @@ using namespace std;
 
 int main(int argc, char** argv){
     // Declare new arguments parser
+    // auto parser = argparse::ArgumentParser(argv[0],
+    //                                        NULL,
+    //                                        "This program is an example of how to use the argparse_cpp library",
+    //                                        "This is just a basic example of the library's usage, more content will be added later and feel free to experiment with it",
+    //                                        NULL,
+    //                                        "-",
+    //                                        NULL,
+    //                                        "0.1.0",
+    //                                        true,
+    //                                        true,
+    //                                        true);
+    
     auto parser = argparse::ArgumentParser(argv[0],
-                                           NULL,
+                                           "usage",
                                            "This program is an example of how to use the argparse_cpp library",
                                            "This is just a basic example of the library's usage, more content will be added later and feel free to experiment with it",
                                            NULL,
                                            "-",
-                                           NULL,
+                                           "+",
                                            "0.1.0",
                                            true,
                                            true,
@@ -30,12 +42,14 @@ int main(int argc, char** argv){
     
     // Declare 3 new arguments in the main arguments parser
     int choices1[2] = {1, 2};
+    // parser.add_argument("-a --argument-a", NULL, 1, 0, 2, "int", 2, choices1, false, "first argument", "metavar", NULL, 0);
     parser.add_argument("-a --argument-a", NULL, 1, 0, 2, "int", 2, choices1, false, "first argument", "metavar", NULL, 0);
     const char* choices2[2] = {"choice_1", "choice_2"};
     parser.add_argument("-b --argument-b", "store", 1, "cst", "def1", "string", 2, choices2, false, "second argument", "metavar", NULL, 0);
     parser.add_argument("-c --argument-c", "store_true", 1, "cst", "def2", "string", 0, NULL, false, "third argument", "metavar", NULL, 0);
 
-    // Declare a first sub-parser and 3 parsers under it
+    // // Declare a first sub-parser and 3 parsers under it
+    // argparse::Subparser* subparser_1 = parser.add_subparsers("tit1", NULL, NULL, NULL, NULL, true, "help of subparser 1", NULL);
     argparse::Subparser* subparser_1 = parser.add_subparsers("tit1", NULL, NULL, NULL, NULL, true, "help of subparser 1", NULL);
 
     auto parser_1 = subparser_1->add_parser("a", NULL);
@@ -43,7 +57,8 @@ int main(int argc, char** argv){
     auto parser_3 = subparser_1->add_parser("c", "help of c");
     
     // Declare a second sub-parser and 4 parsers under it
-    argparse::Subparser* subparser_2 = parser.add_subparsers("tit2", NULL, NULL, NULL, NULL, true, NULL, NULL);
+    // argparse::Subparser* subparser_2 = parser.add_subparsers("tit2", NULL, NULL, NULL, NULL, true, NULL, NULL);
+    argparse::Subparser* subparser_2 = parser.add_subparsers("tit2", NULL, NULL, NULL, NULL, true, "help of subparser 2", NULL);
 
     auto parser_4 = subparser_2->add_parser("d", "help of d");
     auto parser_5 = subparser_2->add_parser("e", "help of e");
@@ -89,6 +104,10 @@ int main(int argc, char** argv){
     argparse::ParsedArguments* parsed_args = parser.parse_args(argc, argv);
 
     parsed_args->print_keys_and_values();
+
+    parser.garbage->order_66();
+    free(parser.garbage);
+    printf("finished");
 
     return 0;
 }

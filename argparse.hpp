@@ -34,6 +34,24 @@ namespace argparse{
         SubparserElement* next;
     };
 
+    class Garbage{
+        private:
+
+        public:
+            int length;
+            int bag_size;
+            int garbage_can_size;
+            void** garbage_can;
+
+            Garbage();
+
+            int throw_away(void* variable);
+
+            int recycle(void* old_variale, void* new_variable);
+
+            int order_66();
+    };
+
     class ParsedArguments{
         private:
 
@@ -44,7 +62,9 @@ namespace argparse{
             type* type_of_value;
             int length;
 
-            ParsedArguments();
+            Garbage* garbage;
+
+            ParsedArguments(Garbage* garbage);
 
             int add_argument(char* key, int number_of_values, undefined_type values, type type_of_value);
 
@@ -135,6 +155,8 @@ namespace argparse{
             bool allow_abbrev;
             bool exit_on_error;
 
+            Garbage* garbage;
+
             int n_arguments;
             int n_subparsers;
 
@@ -194,12 +216,70 @@ namespace argparse{
     //     char* epilog = "Text at the bottom of help";
     // };
 
-    ParsedArguments::ParsedArguments(){
+    Garbage::Garbage(){
+        this->length = 0;
+        this->bag_size = 100;
+        this->garbage_can_size = 0;
+        this->garbage_can = NULL;
+    }
+
+    int Garbage::throw_away(void* variable){
+        if(variable != NULL){
+            if(this->length == this->garbage_can_size){
+                this->garbage_can = (void**) realloc(this->garbage_can, sizeof(void*) * (this->garbage_can_size + this->bag_size));
+                this->garbage_can_size += this->bag_size;
+            }
+
+            this->garbage_can[this->length] = variable;
+            this->length++;
+        }
+
+        return 0;
+    }
+
+    int Garbage::recycle(void* old_variable, void* new_variable){
+        bool found = false;
+
+        if(old_variable == NULL){
+            this->throw_away(new_variable);
+        }
+        else{
+            // if(new_variable != NULL){
+            if(true){
+                for(int i = 0; i < this->length && !found; i++){
+                    if(old_variable == garbage_can[i]){
+                        this->garbage_can[i] = new_variable;
+                        found = true;
+                    }
+                }
+                if(!found){
+                    this->throw_away(new_variable);
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    int Garbage::order_66(){
+        // printf("start order 66\n");
+        for(int i = 0; i < this->length; i++){
+            // printf("(%d/%d) : %lld\n", i, this->length, this->garbage_can[i]);
+            free(this->garbage_can[i]);
+        }
+        free(this->garbage_can);
+        // printf("end order 66\n");
+
+        return 0;
+    }
+
+    ParsedArguments::ParsedArguments(Garbage* garbage){
         this->keys = NULL;
         this->values = NULL;
         this->number_of_values = NULL;
         this->type_of_value = NULL;
         this->length = 0;
+        this->garbage = garbage;
     }
 
     void ParsedArguments::print_keys(){
@@ -260,32 +340,45 @@ namespace argparse{
     }
 
     int ParsedArguments::add_argument(char* key, int number_of_values, undefined_type values, type type_of_value){
+        void* address_ptr = NULL;
         if(this->keys == NULL){
             this->keys = (char**) malloc(sizeof(char*) * 1);
+            this->garbage->throw_away(this->keys);
         }
         else{
+            address_ptr = this->keys;
             this->keys = (char**) realloc(this->keys, sizeof(char*) * (this->length + 1));
+            this->garbage->recycle(address_ptr, this->keys);
         }
 
         if(this->number_of_values == NULL){
             this->number_of_values = (int*) malloc(sizeof(int) * 1);
+            this->garbage->throw_away(this->number_of_values);
         }
         else{
+            address_ptr = this->number_of_values;
             this->number_of_values = (int*) realloc(this->number_of_values, sizeof(int) * (this->length + 1));
+            this->garbage->recycle(address_ptr, this->number_of_values);
         }
 
         if(this->type_of_value == NULL){
             this->type_of_value = (type*) malloc(sizeof(type) * 1);
+            this->garbage->throw_away(this->type_of_value);
         }
         else{
+            address_ptr = this->type_of_value;
             this->type_of_value = (type*) realloc(this->type_of_value, sizeof(type) * (this->length + 1));
+            this->garbage->recycle(address_ptr, this->type_of_value);
         }
 
         if(this->values == NULL){
             this->values = (undefined_type*) malloc(sizeof(undefined_type) * 1);
+            this->garbage->throw_away(this->values);
         }
         else{
+            address_ptr = this->values;
             this->values = (undefined_type*) realloc(this->values, sizeof(undefined_type) * (this->length + 1));
+            this->garbage->recycle(address_ptr, this->values);
         }
 
         this->keys[this->length] = key;
@@ -311,6 +404,7 @@ namespace argparse{
         }
 
         if(this->number_of_values[id] > 1){
+            this->garbage->recycle(this->values[id].undefined_object, NULL);
             free(this->values[id].undefined_object);
         }
 
@@ -351,6 +445,7 @@ namespace argparse{
         bool store_true_false = false;
         char* char_ptr = NULL;
         char* string_copy = NULL;
+        void* address_ptr = NULL;
         if(flags == NULL){
             printf("Flags are necessary to declare a new argument");
             exit(1);
@@ -369,9 +464,14 @@ namespace argparse{
             exit(1);
         }
         this->flags = alloc_and_copy_string(flags);
-        this->action = alloc_and_copy_string(action);
-        if(this->action == NULL){
+        this->parent_parser->garbage->throw_away(this->flags);
+        if(action == NULL){
             this->action = alloc_and_copy_string("store");
+            this->parent_parser->garbage->throw_away(this->action);
+        }
+        else{
+            this->action = alloc_and_copy_string(action);
+            this->parent_parser->garbage->throw_away(this->action);
         }
         if(strcmp(this->action, "store") == 0){
             
@@ -381,24 +481,33 @@ namespace argparse{
             this->constant = constant;
             this->default_value = default_value;
             this->type = alloc_and_copy_string(type);
+            this->parent_parser->garbage->throw_away(this->type);
         }
         else if(strcmp(this->action, "store_true") == 0){
+            address_ptr = this->action;
             free(this->action);
             this->action = alloc_and_copy_string("store_const");
+            this->parent_parser->garbage->recycle(address_ptr, this->action);
+            // this->parent_parser->garbage->throw_away(this->action);
             this->nargs = 0;
             this->default_value._bool = false;
             this->constant._bool = true;
             store_true_false = true;
             this->type = alloc_and_copy_string("bool");
+            this->parent_parser->garbage->throw_away(this->type);
         }
         else if(strcmp(this->action, "store_false") == 0){
+            address_ptr = this->action;
             free(this->action);
             this->action = alloc_and_copy_string("store_const");
+            this->parent_parser->garbage->recycle(address_ptr, this->action);
+            // this->parent_parser->garbage->throw_away(this->action);
             this->nargs = 0;
             this->default_value._bool = true;
             this->constant._bool = false;
             store_true_false = true;
             this->type = alloc_and_copy_string("bool");
+            this->parent_parser->garbage->throw_away(this->type);
         }
         // else if(strcmp(this->action, "append") == 0){
             
@@ -418,6 +527,7 @@ namespace argparse{
             this->constant._bool = true;
             store_true_false = true;
             this->type = alloc_and_copy_string("bool");
+            this->parent_parser->garbage->throw_away(this->type);
         }
         else if(strcmp(this->action, "version") == 0){
             this->nargs = 0;
@@ -425,6 +535,7 @@ namespace argparse{
             this->constant._bool = true;
             store_true_false = true;
             this->type = alloc_and_copy_string("bool");
+            this->parent_parser->garbage->throw_away(this->type);
         }
         else{
             printf("The action argument value must be a correct value or none at all");
@@ -435,6 +546,7 @@ namespace argparse{
             this->constant = constant;
             this->default_value = default_value;
             this->type = alloc_and_copy_string(type);
+            this->parent_parser->garbage->throw_away(this->type);
         }
         // this->nchoices = nchoices;
         // no choices management for now
@@ -442,15 +554,19 @@ namespace argparse{
         this->choices = choices;
         this->required = required;
         this->help = alloc_and_copy_string(help);
+        this->parent_parser->garbage->throw_away(this->help);
         this->metavar = alloc_and_copy_string(metavar);
+        this->parent_parser->garbage->throw_away(this->metavar);
         if(dest == NULL){
             char_ptr = this->flags;
             for(char_ptr = this->flags; strchr(char_ptr, ' ') != NULL; char_ptr = strchr(char_ptr, ' ') + 1);
             for(char_ptr = char_ptr; strchr(parser->prefix_chars, *char_ptr) != NULL; char_ptr++);
             this->dest = alloc_and_copy_string(char_ptr);
+            this->parent_parser->garbage->throw_away(this->dest);
         }
         else{
             this->dest = alloc_and_copy_string(dest);
+            this->parent_parser->garbage->throw_away(this->dest);
         }
         this->deprecated = deprecated;
 
@@ -470,13 +586,20 @@ namespace argparse{
                          const char* metavar){
         this->parent_parser = parent_parser;
         this->title = alloc_and_copy_string(title);
+        this->parent_parser->garbage->throw_away(this->title);
         this->description = alloc_and_copy_string(description);
+        this->parent_parser->garbage->throw_away(this->description);
         this->prog = alloc_and_copy_string(prog);
+        this->parent_parser->garbage->throw_away(this->prog);
         this->action = alloc_and_copy_string(action);
+        this->parent_parser->garbage->throw_away(this->action);
         this->dest = alloc_and_copy_string(dest);
+        this->parent_parser->garbage->throw_away(this->dest);
         this->required = required;
         this->help = alloc_and_copy_string(help);
+        this->parent_parser->garbage->throw_away(this->help);
         this->metavar = alloc_and_copy_string(metavar);
+        this->parent_parser->garbage->throw_away(this->metavar);
 
         this->n_parsers = 0;
         
@@ -497,7 +620,9 @@ namespace argparse{
     */
     ArgumentParser* Subparser::add_parser(const char* sub_command, const char* help){
         SubparserElement* subparser_element = new SubparserElement;
+        this->parent_parser->garbage->throw_away(subparser_element);
         subparser_element->parser = new ArgumentParser(this->parent_parser);
+        this->parent_parser->garbage->throw_away(subparser_element->parser);
         subparser_element->parent_subparser = this;
         // subparser_element->sub_command = NULL;
         if(sub_command == NULL){
@@ -505,8 +630,10 @@ namespace argparse{
             exit(1);
         }
         subparser_element->sub_command = alloc_and_copy_string(sub_command);
+        this->parent_parser->garbage->throw_away(subparser_element->sub_command);
         // subparser_element->help = NULL;
         subparser_element->help = alloc_and_copy_string(help);
+        this->parent_parser->garbage->throw_away(subparser_element->help);
         subparser_element->previous = NULL;
         subparser_element->next = NULL;
         
@@ -548,6 +675,13 @@ namespace argparse{
                               bool add_help,
                               bool allow_abbrev,
                               bool exit_on_error){
+        this->parents = parents;
+        if(parents == NULL){
+            this->garbage = new Garbage();
+        }
+        else{
+            this->garbage = parents->garbage;
+        }
         const char* prog_reformatted = NULL;
         if(prog == NULL){
             printf("A program name is necessary to produce an argument parser");
@@ -558,24 +692,31 @@ namespace argparse{
         for(prog_reformatted = prog + (strlen(prog) - 1); prog_reformatted != prog-1 && *prog_reformatted != '\\'; prog_reformatted--);
         prog = prog_reformatted+1;
         this->prog = alloc_and_copy_string(prog);
-        this->usage = alloc_and_copy_string(usage); // auto build to make
+        this->garbage->throw_away(this->prog);
         if(usage == NULL){
             this->is_usage_auto = true;
             this->usage = (char*) malloc(sizeof(char) * (strlen(this->prog) + 1));
+            this->garbage->throw_away(this->usage);
             strcpy(this->usage, this->prog);
         }
         else{
             this->is_usage_auto = false;
+            this->usage = alloc_and_copy_string(usage); // auto build to make
+            this->garbage->throw_away(this->usage);
         }
         this->description = alloc_and_copy_string(description);
+        this->garbage->throw_away(this->description);
         this->epilog = alloc_and_copy_string(epilog);
+        this->garbage->throw_away(this->epilog);
 
         // this->prefix_chars = (char*) malloc(sizeof(char)*2);
 
-        this->parents = parents;
         this->prefix_chars = alloc_and_copy_string(prefix_chars);
+        this->garbage->throw_away(this->prefix_chars);
         this->fromfile_prefix_chars = alloc_and_copy_string(fromfile_prefix_chars);
+        this->garbage->throw_away(this->fromfile_prefix_chars);
         this->version = alloc_and_copy_string(version);
+        this->garbage->throw_away(this->version);
         // unknown_type argument_default = {NULL};
         // this->argument_default = argument_default;
         this->add_help = add_help;
@@ -699,6 +840,10 @@ namespace argparse{
         Argument* argument = new Argument(this, flags, action, nargs, constant, default_value, type, nchoices, choices,
                                             required, help, metavar, dest, deprecated);
         
+        this->garbage->throw_away(argument);
+        
+        // void* address_ptr = NULL;
+        
         if(this->first_argument == NULL){
             this->first_argument = argument;
             this->last_argument = argument;
@@ -724,10 +869,12 @@ namespace argparse{
             // strcpy_s(flag, flag_size, usage_buffer);
             if(required){
                 this->usage = (char*) malloc(sizeof(char) * (strlen(usage_buffer) + flag_size + 1));
+                this->garbage->recycle(usage_buffer, this->usage);
                 sprintf(this->usage, "%s %s", usage_buffer, flag);
             }
             else{
                 this->usage = (char*) malloc(sizeof(char) * (strlen(usage_buffer) + flag_size + 3));
+                this->garbage->recycle(usage_buffer, this->usage);
                 sprintf(this->usage, "%s [%s]", usage_buffer, flag);
             }
             free(usage_buffer);
@@ -775,6 +922,7 @@ namespace argparse{
         undefined_type* casted_choices = NULL;
         if(nchoices > 0){
             casted_choices = (undefined_type*) malloc(sizeof(undefined_type) * nchoices);
+            this->garbage->throw_away(casted_choices);
             for(int i = 0; i < nchoices; i++){
                 casted_choices[i] = {._int = choices[i]};
             }
@@ -820,6 +968,7 @@ namespace argparse{
         undefined_type* casted_choices = NULL;
         if(nchoices > 0){
             casted_choices = (undefined_type*) malloc(sizeof(undefined_type) * nchoices);
+            this->garbage->throw_away(casted_choices);
             for(int i = 0; i < nchoices; i++){
                 casted_choices[i] = {._float = choices[i]};
             }
@@ -865,6 +1014,7 @@ namespace argparse{
         undefined_type* casted_choices = NULL;
         if(nchoices > 0){
             casted_choices = (undefined_type*) malloc(sizeof(undefined_type) * nchoices);
+            this->garbage->throw_away(casted_choices);
             for(int i = 0; i < nchoices; i++){
                 casted_choices[i] = {._double = choices[i]};
             }
@@ -906,12 +1056,16 @@ namespace argparse{
                                      const char* dest,
                                      bool deprecated){
         undefined_type casted_constant = {._string = alloc_and_copy_string(constant)};
+        this->garbage->throw_away(casted_constant._string);
         undefined_type casted_default_value = {._string = alloc_and_copy_string(default_value)};
+        this->garbage->throw_away(casted_default_value._string);
         undefined_type* casted_choices = NULL;
         if(nchoices > 0){
             casted_choices = (undefined_type*) malloc(sizeof(undefined_type) * nchoices);
+            this->garbage->throw_away(casted_choices);
             for(int i = 0; i < nchoices; i++){
                 casted_choices[i] = {._string = alloc_and_copy_string(choices[i])};
+                this->garbage->throw_away(casted_choices[i]._string);
             }
         }
         int result = this->add_argument(flags, action, nargs, casted_constant, casted_default_value, type, nchoices, casted_choices, required, help, metavar, dest, deprecated);
@@ -952,6 +1106,7 @@ namespace argparse{
                                               const char* help,
                                               const char* metavar){
         Subparser* subparser = new Subparser(this, title, description, prog, action, dest, required, help, metavar);
+        this->garbage->throw_away(subparser);
         if(this->first_subparser == NULL){
             this->first_subparser = subparser;
             this->last_subparser = this->first_subparser;
@@ -994,7 +1149,8 @@ namespace argparse{
 
     ParsedArguments* ArgumentParser::parse_subparsers(int argc, char** argv, ParsedArguments* parsed_args = NULL, bool* args_processed = NULL, int* subparser_element_array_length = NULL, SubparserElement*** subparser_element_array = NULL){
         if(parsed_args == NULL){
-            parsed_args = (ParsedArguments*) malloc(sizeof(ParsedArguments));
+            parsed_args = new ParsedArguments(this->garbage);
+            this->garbage->throw_away(parsed_args);
         }
         if(args_processed == NULL){
             args_processed = (bool*) malloc(sizeof(bool) * argc);
@@ -1115,7 +1271,8 @@ namespace argparse{
 
     ParsedArguments* ArgumentParser::parse_arguments(int argc, char** argv, ParsedArguments* parsed_args = NULL, bool* args_processed = NULL, int* subparser_element_array_length = NULL, SubparserElement*** subparser_element_array = NULL){
         if(parsed_args == NULL){
-            parsed_args = (ParsedArguments*) malloc(sizeof(ParsedArguments));
+            parsed_args = new ParsedArguments(this->garbage);
+            this->garbage->throw_away(parsed_args);
         }
         if(args_processed == NULL){
             args_processed = (bool*) malloc(sizeof(bool) * argc);
@@ -1221,6 +1378,7 @@ namespace argparse{
                     }
                     else if(argument_ptr->nargs > 1){
                         values = (undefined_type*) malloc(sizeof(undefined_type) * argument_ptr->nargs);
+                        this->garbage->throw_away(values);
                         for(int j = 0; j < argument_ptr->nargs; j++){
                             i++;
                             char_ptr = argv[i];
@@ -1241,6 +1399,7 @@ namespace argparse{
                             args_processed[i] = true;
                         }
                         if(strcmp(argument_ptr->type, "string") == 0){
+                            // this->garbage->recycle(parsed_args->values[])
                             parsed_args->change_argument(argument_ptr->dest, argument_ptr->nargs, (undefined_type) {.undefined_object = values}, _string);
                         }
                         else if(strcmp(argument_ptr->type, "int") == 0){
@@ -1300,7 +1459,8 @@ namespace argparse{
      */
     ParsedArguments* ArgumentParser::parse_args(int argc, char** argv, ParsedArguments* parsed_args = NULL, bool* args_processed = NULL, int* subparser_element_array_length = NULL, SubparserElement*** subparser_element_array = NULL){
         if(parsed_args == NULL){
-            parsed_args = (ParsedArguments*) malloc(sizeof(ParsedArguments));
+            parsed_args = new ParsedArguments(this->garbage);
+            this->garbage->throw_away(parsed_args);
         }
         if(args_processed == NULL){
             args_processed = (bool*) malloc(sizeof(bool) * argc);
@@ -1336,6 +1496,13 @@ namespace argparse{
         parsed_args = this->prepare_arguments_in_parsed_args(argc, argv, parsed_args, args_processed, subparser_element_array_length, subparser_element_array);
 
         parsed_args = this->parse_arguments(argc, argv, parsed_args, args_processed, subparser_element_array_length, subparser_element_array);
+
+        free(args_processed);
+        for(int i = 0; i < *subparser_element_array_length; i++){
+            free(subparser_element_array[i]);
+        }
+        free(subparser_element_array_length);
+        free(subparser_element_array);
 
         return parsed_args;
     }

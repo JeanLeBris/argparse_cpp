@@ -619,7 +619,7 @@ namespace argparse{
     * @return ArgumentParser
     */
     ArgumentParser* Subparser::add_parser(const char* sub_command, const char* help){
-        SubparserElement* subparser_element = new SubparserElement;
+        SubparserElement* subparser_element = new SubparserElement();
         this->parent_parser->garbage->throw_away(subparser_element);
         subparser_element->parser = new ArgumentParser(this->parent_parser);
         this->parent_parser->garbage->throw_away(subparser_element->parser);
@@ -1498,11 +1498,9 @@ namespace argparse{
         parsed_args = this->parse_arguments(argc, argv, parsed_args, args_processed, subparser_element_array_length, subparser_element_array);
 
         free(args_processed);
-        for(int i = 0; i < *subparser_element_array_length; i++){
-            free(subparser_element_array[i]);
-        }
-        free(subparser_element_array_length);
+        free(*subparser_element_array);
         free(subparser_element_array);
+        free(subparser_element_array_length);
 
         return parsed_args;
     }

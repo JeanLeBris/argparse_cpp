@@ -701,7 +701,7 @@ namespace argparse{
         }
         else{
             this->is_usage_auto = false;
-            this->usage = alloc_and_copy_string(usage); // auto build to make
+            this->usage = alloc_and_copy_string(usage);
             this->garbage->throw_away(this->usage);
         }
         this->description = alloc_and_copy_string(description);
@@ -842,8 +842,6 @@ namespace argparse{
         
         this->garbage->throw_away(argument);
         
-        // void* address_ptr = NULL;
-        
         if(this->first_argument == NULL){
             this->first_argument = argument;
             this->last_argument = argument;
@@ -868,16 +866,15 @@ namespace argparse{
             flag[flag_size] = '\0';
             // strcpy_s(flag, flag_size, usage_buffer);
             if(required){
-                this->usage = (char*) malloc(sizeof(char) * (strlen(usage_buffer) + flag_size + 1));
+                this->usage = (char*) realloc(this->usage, sizeof(char) * (strlen(this->usage) + 1 + flag_size + 1));
                 this->garbage->recycle(usage_buffer, this->usage);
-                sprintf(this->usage, "%s %s", usage_buffer, flag);
+                sprintf(this->usage, "%s %s", this->usage, flag);
             }
             else{
-                this->usage = (char*) malloc(sizeof(char) * (strlen(usage_buffer) + flag_size + 3));
+                this->usage = (char*) realloc(this->usage, sizeof(char) * (strlen(this->usage) + 1 + flag_size + 3));
                 this->garbage->recycle(usage_buffer, this->usage);
-                sprintf(this->usage, "%s [%s]", usage_buffer, flag);
+                sprintf(this->usage, "%s [%s]", this->usage, flag);
             }
-            free(usage_buffer);
             free(flag);
         }
 

@@ -16,25 +16,13 @@ using namespace std;
 
 int main(int argc, char** argv){
     // Declare new arguments parser
-    // auto parser = argparse::ArgumentParser(argv[0],
-    //                                        NULL,
-    //                                        "This program is an example of how to use the argparse_cpp library",
-    //                                        "This is just a basic example of the library's usage, more content will be added later and feel free to experiment with it",
-    //                                        NULL,
-    //                                        "-",
-    //                                        NULL,
-    //                                        "0.1.0",
-    //                                        true,
-    //                                        true,
-    //                                        true);
-    
     auto parser = argparse::ArgumentParser(argv[0],
-                                           "usage",
+                                           NULL,
                                            "This program is an example of how to use the argparse_cpp library",
                                            "This is just a basic example of the library's usage, more content will be added later and feel free to experiment with it",
                                            NULL,
                                            "-",
-                                           "+",
+                                           NULL,
                                            "0.1.0",
                                            true,
                                            true,

@@ -67,8 +67,7 @@ int main(int argc, char** argv){
     subparser_2->add_parser("4", "help of g");
 
 
-
-
+    
     // // Display the main parser's help
     // print_padding_characters(0, 80, '#');
     // printf("\n# First parser's help");
@@ -95,7 +94,6 @@ int main(int argc, char** argv){
 
     parser.garbage->order_66();
     free(parser.garbage);
-    printf("finished");
 
     return 0;
 }

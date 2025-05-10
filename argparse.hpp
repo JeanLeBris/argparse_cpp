@@ -1743,7 +1743,8 @@ namespace argparse{
                 }
             }
             else if(strcmp(argument->getType(), "int") == 0){
-                itoa(argument->getDefaultValue()._int, string_buffer, 10);
+                // itoa(argument->getDefaultValue()._int, string_buffer, 10);
+                snprintf(string_buffer, 19, "%d", argument->getDefaultValue()._int);
                 if(strlen(string_buffer) > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(string_buffer);
                 }
@@ -1796,7 +1797,8 @@ namespace argparse{
                 }
                 else if(strcmp(argument->getType(), "int") == 0){
                     printf("%d", argument->getDefaultValue()._int);
-                    itoa(argument->getDefaultValue()._int, string_buffer, 10);
+                    // itoa(argument->getDefaultValue()._int, string_buffer, 10);
+                    snprintf(string_buffer, 19, "%d", argument->getDefaultValue()._int);
                     print_padding_characters(string_buffer, arg_default_value_max_length+5, ' ');
                 }
                 else if(strcmp(argument->getType(), "float") == 0){

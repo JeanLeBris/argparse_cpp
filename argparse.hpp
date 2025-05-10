@@ -140,8 +140,6 @@ namespace argparse{
 
     class Subparser{
         private:
-        
-        public:
             char* title;
             char* description;
             char* prog;
@@ -162,7 +160,29 @@ namespace argparse{
             Subparser* previous;
             Subparser* next;
 
+        public:
             Subparser(ArgumentParser* parent_parser, const char* title, const char* description, const char* prog, const char* action, const char* dest, bool required, const char* help, const char* metavar); // no parser_class yet
+
+            Subparser* getNext();
+            void setNext(Subparser* next);
+
+            Subparser* getPrevious();
+            void setPrevious(Subparser* previous);
+
+            char* getTitle();
+            void setTitle(char* title);
+
+            int getNparsers();
+            void setNparsers(int n_parsers);
+
+            bool getRequired();
+            void setRequired(bool required);
+
+            SubparserElement* getFirstParser();
+            void setFirstParser(SubparserElement* first_parser);
+
+            char* getHelp();
+            void setHelp(char* help);
 
             ArgumentParser* add_parser(const char* sub_command, const char* help);
 
@@ -170,7 +190,6 @@ namespace argparse{
     };
 
     class ArgumentParser{
-        // parser();
         private:
 
         public:
@@ -749,6 +768,62 @@ namespace argparse{
         this->next = NULL;
     }
     
+    Subparser* Subparser::getNext(){
+        return this->next;
+    }
+
+    void Subparser::setNext(Subparser* next){
+        this->next = next;
+    }
+
+    Subparser* Subparser::getPrevious(){
+        return this->previous;
+    }
+
+    void Subparser::setPrevious(Subparser* previous){
+        this->previous = previous;
+    }
+
+    char* Subparser::getTitle(){
+        return this->title;
+    }
+
+    void Subparser::setTitle(char* title){
+        this->title = title;
+    }
+
+    int Subparser::getNparsers(){
+        return this->n_parsers;
+    }
+
+    void Subparser::setNparsers(int n_parsers){
+        this->n_parsers = n_parsers;
+    }
+
+    bool Subparser::getRequired(){
+        return this->required;
+    }
+
+    void Subparser::setRequired(bool required){
+        this->required = required;
+    }
+
+    SubparserElement* Subparser::getFirstParser(){
+        return this->first_parser;
+    }
+
+    void Subparser::setFirstParser(SubparserElement* first_parser){
+        this->first_parser = first_parser;
+    }
+
+    char* Subparser::getHelp(){
+        return this->help;
+    }
+
+    void Subparser::setHelp(char* help){
+        this->help = help;
+    }
+
     /**
     * Add a parser to the subparser
     * 
@@ -1248,8 +1323,8 @@ namespace argparse{
             this->last_subparser = this->first_subparser;
         }
         else{
-            this->last_subparser->next = subparser;
-            subparser->previous = this->last_subparser;
+            this->last_subparser->setNext(subparser);
+            subparser->setPrevious(this->last_subparser);
             this->last_subparser = subparser;
         }
 
@@ -1261,7 +1336,7 @@ namespace argparse{
     Subparser* ArgumentParser::get_Nth_subparser(int n){
         Subparser* subparser = this->first_subparser;
         for(int i = 0; i < (n < this->n_subparsers - 1 ? n : this->n_subparsers - 1); i++){
-            subparser = subparser->next;
+            subparser = subparser->getNext();
         }
 
         return subparser;
@@ -1273,8 +1348,8 @@ namespace argparse{
 
         for(int j = 0; j < this->n_subparsers; j++){ // read in each subparsers
             subparser_ptr = this->get_Nth_subparser(j);
-            parsed_args->add_argument(subparser_ptr->title, 0, (undefined_type) {._string = NULL}, _string);
-            for(int k = 0; k < subparser_ptr->n_parsers; k++){ // read in each subparsers' parsers
+            parsed_args->add_argument(subparser_ptr->getTitle(), 0, (undefined_type) {._string = NULL}, _string);
+            for(int k = 0; k < subparser_ptr->getNparsers(); k++){ // read in each subparsers' parsers
                 subparser_element_ptr = subparser_ptr->get_Nth_subparser_element(k);
                 parsed_args = subparser_element_ptr->parser->prepare_subparsers_in_parsed_args(argc, argv, parsed_args, args_processed, subparser_element_array_length, subparser_element_array);
             }
@@ -1317,8 +1392,8 @@ namespace argparse{
                 char_ptr = argv[i];
                 for(int j = 0; j < this->n_subparsers; j++){ // read in each subparsers
                     subparser_ptr = this->get_Nth_subparser(j);
-                    required = subparser_ptr->required;
-                    for(int k = 0; k < subparser_ptr->n_parsers; k++){ // read in each subparsers' parsers
+                    required = subparser_ptr->getRequired();
+                    for(int k = 0; k < subparser_ptr->getNparsers(); k++){ // read in each subparsers' parsers
                         subparser_element_ptr = subparser_ptr->get_Nth_subparser_element(k);
                         if((instance_ptr = strstr(subparser_element_ptr->sub_command, char_ptr)) != NULL){
                             if(instance_ptr == subparser_element_ptr->sub_command && instance_ptr[strlen(char_ptr)] == '\0'){ // if the command is of the subparser's parser
@@ -1334,7 +1409,7 @@ namespace argparse{
                                 (*subparser_element_array)[*subparser_element_array_length-1] = subparser_element_ptr;
                                 args_processed[i] = true;
 
-                                parsed_args->change_argument(subparser_element_ptr->parent_subparser->title, 1, (undefined_type) {._string = subparser_element_ptr->sub_command}, _string);
+                                parsed_args->change_argument(subparser_element_ptr->parent_subparser->getTitle(), 1, (undefined_type) {._string = subparser_element_ptr->sub_command}, _string);
 
                                 parsed_args = subparser_element_ptr->parser->parse_subparsers(argc, argv, parsed_args, args_processed, subparser_element_array_length, subparser_element_array);
                             }
@@ -1768,9 +1843,9 @@ namespace argparse{
             printf("\n");
         }
 
-        for(Subparser* subparser = this->first_subparser; subparser != NULL; subparser = subparser->next){
+        for(Subparser* subparser = this->first_subparser; subparser != NULL; subparser = subparser->getNext()){
             sum = 2;
-            for(SubparserElement* subparser_element = subparser->first_parser; subparser_element != NULL; subparser_element = subparser_element->next){
+            for(SubparserElement* subparser_element = subparser->getFirstParser(); subparser_element != NULL; subparser_element = subparser_element->next){
                 sum += strlen(subparser_element->sub_command)+1;
             }
             if(sum != 2){
@@ -1788,10 +1863,10 @@ namespace argparse{
             print_padding_characters("FLAGS", sub_flags_max_length+5, ' ');
             printf("HELP");
             printf("\n");
-            for(Subparser* subparser = this->first_subparser; subparser != NULL; subparser = subparser->next){
+            for(Subparser* subparser = this->first_subparser; subparser != NULL; subparser = subparser->getNext()){
                 sum = 2;
                 printf("\t{");
-                for(SubparserElement* subparser_element = subparser->first_parser; subparser_element != NULL; subparser_element = subparser_element->next){
+                for(SubparserElement* subparser_element = subparser->getFirstParser(); subparser_element != NULL; subparser_element = subparser_element->next){
                     printf("%s", subparser_element->sub_command);
                     sum += strlen(subparser_element->sub_command);
                     if(subparser_element->next != NULL){
@@ -1801,9 +1876,9 @@ namespace argparse{
                 }
                 printf("}");
                 print_padding_characters(sum, sub_flags_max_length+5, ' ');
-                printf("%s\n", subparser->help != NULL ? subparser->help : "      ");
+                printf("%s\n", subparser->getHelp() != NULL ? subparser->getHelp() : "      ");
 
-                for(SubparserElement* subparser_element = subparser->first_parser; subparser_element != NULL; subparser_element = subparser_element->next){
+                for(SubparserElement* subparser_element = subparser->getFirstParser(); subparser_element != NULL; subparser_element = subparser_element->next){
                     printf("\t%s", subparser_element->sub_command);
                     print_padding_characters(subparser_element->sub_command, sub_flags_max_length+5, ' ');
                     printf("%s", subparser_element->help != NULL ? subparser_element->help : "      ");

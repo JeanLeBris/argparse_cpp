@@ -1592,7 +1592,7 @@ namespace argparse{
                     else if(argument_ptr->getNargs() > 1){
                         values = (undefined_type*) malloc(sizeof(undefined_type) * argument_ptr->getNargs());
                         this->garbage->throw_away(values);
-                        for(int j = 0; j < argument_ptr->getNargs(); j++){
+                        for(int j = 0; j < argument_ptr->getNargs() && i+1 < argc; j++){
                             i++;
                             char_ptr = argv[i];
                             if(strcmp(argument_ptr->getAction(), "store") == 0){

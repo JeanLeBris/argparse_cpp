@@ -83,7 +83,7 @@ namespace argparse{
             int nargs;
             undefined_type constant;
             undefined_type default_value;
-            char* type;
+            type type_of_argument;
             int nchoices;
             undefined_type* choices;
             bool required;
@@ -96,7 +96,7 @@ namespace argparse{
             Argument* next;
 
         public:
-            Argument(ArgumentParser* parser, const char* flags, const char* action, int nargs, undefined_type constant, undefined_type default_value, const char* type, int nchoices, undefined_type* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
+            Argument(ArgumentParser* parser, const char* flags, const char* action, int nargs, undefined_type constant, undefined_type default_value, type type_of_argument, int nchoices, undefined_type* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
 
             Argument* getPrevious();
             void setPrevious(Argument* previous);
@@ -104,8 +104,8 @@ namespace argparse{
             Argument* getNext();
             void setNext(Argument* next);
             
-            char* getType();
-            void setType(char* type);
+            type getType();
+            void setType(type type_of_argument);
 
             char* getDest();
             void setDest(char* dest);
@@ -225,7 +225,7 @@ namespace argparse{
 
             void init(const char* prog, const char* usage, const char* description, const char* epilog, ArgumentParser* parents, const char* prefix_chars, const char* fromfile_prefix_chars, const char* version, bool add_help, bool allow_abbrev, bool exit_on_error); // no formatter_class, argument_default or conflict_handler yet
 
-            int add_argument(const char* flags, const char* action, int nargs, undefined_type constant, undefined_type default_value, const char* type, int nchoices, undefined_type* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
+            int add_argument(const char* flags, const char* action, int nargs, undefined_type constant, undefined_type default_value, type type_of_argument, int nchoices, undefined_type* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
 
             ParsedArguments* prepare_subparsers_in_parsed_args(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
             ParsedArguments* parse_subparsers(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
@@ -475,7 +475,7 @@ namespace argparse{
                        int nargs,
                        undefined_type constant,
                        undefined_type default_value,
-                       const char* type,
+                       type type_of_argument,
                        int nchoices,
                        undefined_type* choices,
                        bool required,
@@ -522,8 +522,8 @@ namespace argparse{
             this->nargs = 0;
             this->constant = constant;
             this->default_value = default_value;
-            this->type = alloc_and_copy_string(type);
-            this->parent_parser->getGarbage()->throw_away(this->type);
+            this->type_of_argument = type_of_argument;
+            // this->parent_parser->getGarbage()->throw_away(this->type);
         }
         else if(strcmp(this->action, "store_true") == 0){
             address_ptr = this->action;
@@ -535,8 +535,8 @@ namespace argparse{
             this->default_value._bool = false;
             this->constant._bool = true;
             store_true_false = true;
-            this->type = alloc_and_copy_string("bool");
-            this->parent_parser->getGarbage()->throw_away(this->type);
+            this->type_of_argument = _bool;
+            // this->parent_parser->getGarbage()->throw_away(this->type);
         }
         else if(strcmp(this->action, "store_false") == 0){
             address_ptr = this->action;
@@ -548,8 +548,8 @@ namespace argparse{
             this->default_value._bool = true;
             this->constant._bool = false;
             store_true_false = true;
-            this->type = alloc_and_copy_string("bool");
-            this->parent_parser->getGarbage()->throw_away(this->type);
+            this->type_of_argument = _bool;
+            // this->parent_parser->getGarbage()->throw_away(this->type);
         }
         // else if(strcmp(this->action, "append") == 0){
             
@@ -568,16 +568,16 @@ namespace argparse{
             this->default_value._bool = false;
             this->constant._bool = true;
             store_true_false = true;
-            this->type = alloc_and_copy_string("bool");
-            this->parent_parser->getGarbage()->throw_away(this->type);
+            this->type_of_argument = _bool;
+            // this->parent_parser->getGarbage()->throw_away(this->type);
         }
         else if(strcmp(this->action, "version") == 0){
             this->nargs = 0;
             this->default_value._bool = false;
             this->constant._bool = true;
             store_true_false = true;
-            this->type = alloc_and_copy_string("bool");
-            this->parent_parser->getGarbage()->throw_away(this->type);
+            this->type_of_argument = _bool;
+            // this->parent_parser->getGarbage()->throw_away(this->type);
         }
         else{
             printf("The action argument value must be a correct value or none at all");
@@ -587,8 +587,8 @@ namespace argparse{
             this->nargs = nargs;
             this->constant = constant;
             this->default_value = default_value;
-            this->type = alloc_and_copy_string(type);
-            this->parent_parser->getGarbage()->throw_away(this->type);
+            this->type_of_argument = type_of_argument;
+            // this->parent_parser->getGarbage()->throw_away(this->type);
         }
         this->nchoices = nchoices;
         this->choices = choices;
@@ -630,12 +630,12 @@ namespace argparse{
         this->next = next;
     }
     
-    char* Argument::getType(){
-        return this->type;
+    type Argument::getType(){
+        return this->type_of_argument;
     }
 
-    void Argument::setType(char* type){
-        this->type = type;
+    void Argument::setType(type type_of_argument){
+        this->type_of_argument = type_of_argument;
     }
 
     char* Argument::getDest(){
@@ -1045,7 +1045,7 @@ namespace argparse{
                                      int nargs,
                                      undefined_type constant,
                                      undefined_type default_value,
-                                     const char* type,
+                                     type type_of_argument,
                                      int nchoices,
                                      undefined_type* choices,
                                      bool required,
@@ -1053,7 +1053,7 @@ namespace argparse{
                                      const char* metavar,
                                      const char* dest,
                                      bool deprecated){
-        Argument* argument = new Argument(this, flags, action, nargs, constant, default_value, type, nchoices, choices,
+        Argument* argument = new Argument(this, flags, action, nargs, constant, default_value, type_of_argument, nchoices, choices,
                                             required, help, metavar, dest, deprecated);
         
         this->garbage->throw_away(argument);
@@ -1140,7 +1140,7 @@ namespace argparse{
                 casted_choices[i] = {._int = choices[i]};
             }
         }
-        int result = this->add_argument(flags, action, nargs, casted_constant, casted_default_value, type, nchoices, casted_choices, required, help, metavar, dest, deprecated);
+        int result = this->add_argument(flags, action, nargs, casted_constant, casted_default_value, _int, nchoices, casted_choices, required, help, metavar, dest, deprecated);
         
         return result;
     }
@@ -1186,7 +1186,7 @@ namespace argparse{
                 casted_choices[i] = {._float = choices[i]};
             }
         }
-        int result = this->add_argument(flags, action, nargs, casted_constant, casted_default_value, type, nchoices, casted_choices, required, help, metavar, dest, deprecated);
+        int result = this->add_argument(flags, action, nargs, casted_constant, casted_default_value, _float, nchoices, casted_choices, required, help, metavar, dest, deprecated);
 
         return result;
     }
@@ -1232,7 +1232,7 @@ namespace argparse{
                 casted_choices[i] = {._double = choices[i]};
             }
         }
-        int result = this->add_argument(flags, action, nargs, casted_constant, casted_default_value, type, nchoices, casted_choices, required, help, metavar, dest, deprecated);
+        int result = this->add_argument(flags, action, nargs, casted_constant, casted_default_value, _double, nchoices, casted_choices, required, help, metavar, dest, deprecated);
 
         return result;
     }
@@ -1281,7 +1281,7 @@ namespace argparse{
                 this->garbage->throw_away(casted_choices[i]._string);
             }
         }
-        int result = this->add_argument(flags, action, nargs, casted_constant, casted_default_value, type, nchoices, casted_choices, required, help, metavar, dest, deprecated);
+        int result = this->add_argument(flags, action, nargs, casted_constant, casted_default_value, _string, nchoices, casted_choices, required, help, metavar, dest, deprecated);
         
         return result;
     }
@@ -1439,21 +1439,22 @@ namespace argparse{
                 argument_ptr = subparser_element_ptr->parser->get_Nth_argument(j);
 
                 if(!parsed_args->is_key(argument_ptr->getDest())){
-                    if(strcmp(argument_ptr->getType(), "string") == 0){
-                        parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._string = argument_ptr->getDefaultValue()._string}, _string);
-                    }
-                    else if(strcmp(argument_ptr->getType(), "int") == 0){
-                        parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._int = argument_ptr->getDefaultValue()._int}, _int);
-                    }
-                    else if(strcmp(argument_ptr->getType(), "float") == 0){
-                        parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._float = argument_ptr->getDefaultValue()._float}, _float);
-                    }
-                    else if(strcmp(argument_ptr->getType(), "double") == 0){
-                        parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._double = argument_ptr->getDefaultValue()._double}, _double);
-                    }
-                    else if(strcmp(argument_ptr->getType(), "bool") == 0){
-                        parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._bool = argument_ptr->getDefaultValue()._bool}, _bool);
-                    }
+                    parsed_args->add_argument(argument_ptr->getDest(), 1, argument_ptr->getDefaultValue(), argument_ptr->getType());
+                    // if(strcmp(argument_ptr->getType(), "string") == 0){
+                    //     parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._string = argument_ptr->getDefaultValue()._string}, _string);
+                    // }
+                    // else if(strcmp(argument_ptr->getType(), "int") == 0){
+                    //     parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._int = argument_ptr->getDefaultValue()._int}, _int);
+                    // }
+                    // else if(strcmp(argument_ptr->getType(), "float") == 0){
+                    //     parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._float = argument_ptr->getDefaultValue()._float}, _float);
+                    // }
+                    // else if(strcmp(argument_ptr->getType(), "double") == 0){
+                    //     parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._double = argument_ptr->getDefaultValue()._double}, _double);
+                    // }
+                    // else if(strcmp(argument_ptr->getType(), "bool") == 0){
+                    //     parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._bool = argument_ptr->getDefaultValue()._bool}, _bool);
+                    // }
                 }
             }
         }
@@ -1461,21 +1462,22 @@ namespace argparse{
         for(int j = 0; j < this->n_arguments; j++){
             argument_ptr = this->get_Nth_argument(j);
             if(!parsed_args->is_key(argument_ptr->getDest())){
-                if(strcmp(argument_ptr->getType(), "string") == 0){
-                    parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._string = argument_ptr->getDefaultValue()._string}, _string);
-                }
-                else if(strcmp(argument_ptr->getType(), "int") == 0){
-                    parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._int = argument_ptr->getDefaultValue()._int}, _int);
-                }
-                else if(strcmp(argument_ptr->getType(), "float") == 0){
-                    parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._float = argument_ptr->getDefaultValue()._float}, _float);
-                }
-                else if(strcmp(argument_ptr->getType(), "double") == 0){
-                    parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._double = argument_ptr->getDefaultValue()._double}, _double);
-                }
-                else if(strcmp(argument_ptr->getType(), "bool") == 0){
-                    parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._bool = argument_ptr->getDefaultValue()._bool}, _bool);
-                }
+                parsed_args->add_argument(argument_ptr->getDest(), 1, argument_ptr->getDefaultValue(), argument_ptr->getType());
+                // if(strcmp(argument_ptr->getType(), "string") == 0){
+                //     parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._string = argument_ptr->getDefaultValue()._string}, _string);
+                // }
+                // else if(strcmp(argument_ptr->getType(), "int") == 0){
+                //     parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._int = argument_ptr->getDefaultValue()._int}, _int);
+                // }
+                // else if(strcmp(argument_ptr->getType(), "float") == 0){
+                //     parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._float = argument_ptr->getDefaultValue()._float}, _float);
+                // }
+                // else if(strcmp(argument_ptr->getType(), "double") == 0){
+                //     parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._double = argument_ptr->getDefaultValue()._double}, _double);
+                // }
+                // else if(strcmp(argument_ptr->getType(), "bool") == 0){
+                //     parsed_args->add_argument(argument_ptr->getDest(), 1, (undefined_type) {._bool = argument_ptr->getDefaultValue()._bool}, _bool);
+                // }
             }
         }
 
@@ -1553,37 +1555,38 @@ namespace argparse{
                             argument_ptr->getParentParser()->print_version();
                         }
                         else if(strcmp(argument_ptr->getAction(), "store_const") == 0){
-                            if(strcmp(argument_ptr->getType(), "string") == 0){
-                                parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._string = argument_ptr->getConstant()._string}, _string);
-                            }
-                            else if(strcmp(argument_ptr->getType(), "int") == 0){
-                                parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._int = argument_ptr->getConstant()._int}, _int);
-                            }
-                            else if(strcmp(argument_ptr->getType(), "float") == 0){
-                                parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._float = argument_ptr->getConstant()._float}, _float);
-                            }
-                            else if(strcmp(argument_ptr->getType(), "double") == 0){
-                                parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._double = argument_ptr->getConstant()._double}, _double);
-                            }
-                            else if(strcmp(argument_ptr->getType(), "bool") == 0){
-                                parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._bool = argument_ptr->getConstant()._bool}, _bool);
-                            }
+                            parsed_args->change_argument(argument_ptr->getDest(), 1, argument_ptr->getConstant(), argument_ptr->getType());
+                            // if(strcmp(argument_ptr->getType(), "string") == 0){
+                            //     parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._string = argument_ptr->getConstant()._string}, _string);
+                            // }
+                            // else if(strcmp(argument_ptr->getType(), "int") == 0){
+                            //     parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._int = argument_ptr->getConstant()._int}, _int);
+                            // }
+                            // else if(strcmp(argument_ptr->getType(), "float") == 0){
+                            //     parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._float = argument_ptr->getConstant()._float}, _float);
+                            // }
+                            // else if(strcmp(argument_ptr->getType(), "double") == 0){
+                            //     parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._double = argument_ptr->getConstant()._double}, _double);
+                            // }
+                            // else if(strcmp(argument_ptr->getType(), "bool") == 0){
+                            //     parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._bool = argument_ptr->getConstant()._bool}, _bool);
+                            // }
                         }
                     }
                     else if(argument_ptr->getNargs() == 1){
                         i++;
                         char_ptr = argv[i];
                         if(strcmp(argument_ptr->getAction(), "store") == 0){
-                            if(strcmp(argument_ptr->getType(), "string") == 0){
+                            if(argument_ptr->getType() == _string){
                                 parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._string = char_ptr}, _string);
                             }
-                            else if(strcmp(argument_ptr->getType(), "int") == 0){
+                            else if(argument_ptr->getType() == _int){
                                 parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._int = atoi(char_ptr)}, _int);
                             }
-                            else if(strcmp(argument_ptr->getType(), "float") == 0){
+                            else if(argument_ptr->getType() == _float){
                                 parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._float = (float) atof(char_ptr)}, _float);
                             }
-                            else if(strcmp(argument_ptr->getType(), "double") == 0){
+                            else if(argument_ptr->getType() == _double){
                                 parsed_args->change_argument(argument_ptr->getDest(), 1, (undefined_type) {._double = atof(char_ptr)}, _double);
                             }
                         }
@@ -1596,34 +1599,35 @@ namespace argparse{
                             i++;
                             char_ptr = argv[i];
                             if(strcmp(argument_ptr->getAction(), "store") == 0){
-                                if(strcmp(argument_ptr->getType(), "string") == 0){
+                                if(argument_ptr->getType() == _string){
                                     values[j] = {._string = char_ptr};
                                 }
-                                else if(strcmp(argument_ptr->getType(), "int") == 0){
+                                else if(argument_ptr->getType() == _int){
                                     values[j] = {._int = atoi(char_ptr)};
                                 }
-                                else if(strcmp(argument_ptr->getType(), "float") == 0){
+                                else if(argument_ptr->getType() == _float){
                                     values[j] = {._float = (float) atof(char_ptr)};
                                 }
-                                else if(strcmp(argument_ptr->getType(), "double") == 0){
+                                else if(argument_ptr->getType() == _double){
                                     values[j] = {._double = atof(char_ptr)};
                                 }
                             }
                             args_processed[i] = true;
                         }
-                        if(strcmp(argument_ptr->getType(), "string") == 0){
-                            // this->garbage->recycle(parsed_args->values[])
-                            parsed_args->change_argument(argument_ptr->getDest(), argument_ptr->getNargs(), (undefined_type) {.undefined_object = values}, _string);
-                        }
-                        else if(strcmp(argument_ptr->getType(), "int") == 0){
-                            parsed_args->change_argument(argument_ptr->getDest(), argument_ptr->getNargs(), (undefined_type) {.undefined_object = values}, _int);
-                        }
-                        else if(strcmp(argument_ptr->getType(), "float") == 0){
-                            parsed_args->change_argument(argument_ptr->getDest(), argument_ptr->getNargs(), (undefined_type) {.undefined_object = values}, _float);
-                        }
-                        else if(strcmp(argument_ptr->getType(), "double") == 0){
-                            parsed_args->change_argument(argument_ptr->getDest(), argument_ptr->getNargs(), (undefined_type) {.undefined_object = values}, _double);
-                        }
+                        parsed_args->change_argument(argument_ptr->getDest(), argument_ptr->getNargs(), (undefined_type) {.undefined_object = values}, argument_ptr->getType());
+                        // if(strcmp(argument_ptr->getType(), "string") == 0){
+                        //     // this->garbage->recycle(parsed_args->values[])
+                        //     parsed_args->change_argument(argument_ptr->getDest(), argument_ptr->getNargs(), (undefined_type) {.undefined_object = values}, _string);
+                        // }
+                        // else if(strcmp(argument_ptr->getType(), "int") == 0){
+                        //     parsed_args->change_argument(argument_ptr->getDest(), argument_ptr->getNargs(), (undefined_type) {.undefined_object = values}, _int);
+                        // }
+                        // else if(strcmp(argument_ptr->getType(), "float") == 0){
+                        //     parsed_args->change_argument(argument_ptr->getDest(), argument_ptr->getNargs(), (undefined_type) {.undefined_object = values}, _float);
+                        // }
+                        // else if(strcmp(argument_ptr->getType(), "double") == 0){
+                        //     parsed_args->change_argument(argument_ptr->getDest(), argument_ptr->getNargs(), (undefined_type) {.undefined_object = values}, _double);
+                        // }
                     }
                 }
                 else{
@@ -1737,31 +1741,31 @@ namespace argparse{
             if(strlen(argument->getFlags()) > arg_flags_max_length){
                 arg_flags_max_length = strlen(argument->getFlags());
             }
-            if(strcmp(argument->getType(), "string") == 0){
+            if(argument->getType() == _string){
                 if(argument->getDefaultValue()._string != NULL && strlen(argument->getDefaultValue()._string) > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(argument->getDefaultValue()._string);
                 }
             }
-            else if(strcmp(argument->getType(), "int") == 0){
+            else if(argument->getType() == _int){
                 // itoa(argument->getDefaultValue()._int, string_buffer, 10);
                 snprintf(string_buffer, 19, "%d", argument->getDefaultValue()._int);
                 if(strlen(string_buffer) > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(string_buffer);
                 }
             }
-            else if(strcmp(argument->getType(), "float") == 0){
+            else if(argument->getType() == _float){
                 gcvt(argument->getDefaultValue()._float, 10, string_buffer);
                 if(strlen(string_buffer) > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(string_buffer);
                 }
             }
-            else if(strcmp(argument->getType(), "double") == 0){
+            else if(argument->getType() == _double){
                 gcvt(argument->getDefaultValue()._double, 10, string_buffer);
                 if(strlen(string_buffer) > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(string_buffer);
                 }
             }
-            else if(strcmp(argument->getType(), "bool") == 0){
+            else if(argument->getType() == _bool){
                 if(strlen(argument->getDefaultValue()._bool ? "True" : "False") > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(argument->getDefaultValue()._bool ? "True" : "False");
                 }
@@ -1791,52 +1795,52 @@ namespace argparse{
                 printf("\t%s", argument->getFlags());
                 print_padding_characters(argument->getFlags(), arg_flags_max_length+5, ' ');
                 
-                if(strcmp(argument->getType(), "string") == 0){
+                if(argument->getType() == _string){
                     printf("%s", argument->getDefaultValue()._string);
                     print_padding_characters(argument->getDefaultValue()._string, arg_default_value_max_length+5, ' ');
                 }
-                else if(strcmp(argument->getType(), "int") == 0){
+                else if(argument->getType() == _int){
                     printf("%d", argument->getDefaultValue()._int);
                     // itoa(argument->getDefaultValue()._int, string_buffer, 10);
                     snprintf(string_buffer, 19, "%d", argument->getDefaultValue()._int);
                     print_padding_characters(string_buffer, arg_default_value_max_length+5, ' ');
                 }
-                else if(strcmp(argument->getType(), "float") == 0){
+                else if(argument->getType() == _float){
                     printf("%f", argument->getDefaultValue()._float);
                     gcvt(argument->getDefaultValue()._float, 10, string_buffer);
                     print_padding_characters(string_buffer, arg_default_value_max_length+5, ' ');
                 }
-                else if(strcmp(argument->getType(), "double") == 0){
+                else if(argument->getType() == _double){
                     printf("%f", argument->getDefaultValue()._double);
                     gcvt(argument->getDefaultValue()._double, 10, string_buffer);
                     print_padding_characters(string_buffer, arg_default_value_max_length+5, ' ');
                 }
-                else if(strcmp(argument->getType(), "bool") == 0){
+                else if(argument->getType() == _bool){
                     printf(argument->getDefaultValue()._bool ? "True" : "False");
                     print_padding_characters(argument->getDefaultValue()._bool ? "True" : "False", arg_default_value_max_length+5, ' ');
                 }
                 // printf("\t%d", sizeof(argument->choices));
                 printf("%s", argument->getHelp());
                 print_padding_characters(argument->getHelp(), arg_help_max_length+5, ' ');
-                if(argument->getChoices() != NULL && strcmp(argument->getType(), "string") == 0){
+                if(argument->getChoices() != NULL && argument->getType() == _string){
                     // printf("");
                     for(int i = 0; i < argument->getNchoices(); i++){
                         printf("%s ", argument->getChoices()[i]);
                     }
                 }
-                else if(argument->getChoices() != NULL && strcmp(argument->getType(), "int") == 0){
+                else if(argument->getChoices() != NULL && argument->getType() == _int){
                     // printf("");
                     for(int i = 0; i < argument->getNchoices(); i++){
                         printf("%d ", argument->getChoices()[i]);
                     }
                 }
-                else if(argument->getChoices() != NULL && strcmp(argument->getType(), "float") == 0){
+                else if(argument->getChoices() != NULL && argument->getType() == _float){
                     // printf("");
                     for(int i = 0; i < argument->getNchoices(); i++){
                         printf("%f ", argument->getChoices()[i]);
                     }
                 }
-                else if(argument->getChoices() != NULL && strcmp(argument->getType(), "double") == 0){
+                else if(argument->getChoices() != NULL && argument->getType() == _double){
                     // printf("");
                     for(int i = 0; i < argument->getNchoices(); i++){
                         printf("%f ", argument->getChoices()[i]);

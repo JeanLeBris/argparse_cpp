@@ -61,3 +61,19 @@ char* alloc_and_copy_string(const char* input_string){
     
     return output_string;
 }
+
+int print_title(const char* content, int length, char character){
+    char* content_and_first_char = (char*) malloc(sizeof(char) * (strlen(content) + 2));
+
+    sprintf(content_and_first_char, "%c %s", character, content);
+    print_padding_characters(0, length, character);
+    printf("\n%s", content_and_first_char);
+    print_padding_characters(content_and_first_char, length - 1, ' ');
+    printf("%c\n", character);
+    print_padding_characters(0, length, character);
+    printf("\n");
+
+    free(content_and_first_char);
+
+    return 0;
+}

@@ -223,13 +223,21 @@ namespace argparse{
             int arg_help_max_length;
             int arg_choices_max_length;
 
-        public:
             void init(const char* prog, const char* usage, const char* description, const char* epilog, ArgumentParser* parents, const char* prefix_chars, const char* fromfile_prefix_chars, const char* version, bool add_help, bool allow_abbrev, bool exit_on_error); // no formatter_class, argument_default or conflict_handler yet
-            
+
+            int add_argument(const char* flags, const char* action, int nargs, undefined_type constant, undefined_type default_value, const char* type, int nchoices, undefined_type* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
+
+            ParsedArguments* prepare_subparsers_in_parsed_args(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
+            ParsedArguments* parse_subparsers(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
+            ParsedArguments* prepare_arguments_in_parsed_args(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
+            ParsedArguments* parse_arguments(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
+
+            int print_help();
+            int print_version();
+
+        public:
             ArgumentParser(const char* prog, const char* usage, const char* description, const char* epilog, ArgumentParser* parents, const char* prefix_chars, const char* fromfile_prefix_chars, const char* version, bool add_help, bool allow_abbrev, bool exit_on_error); // no formatter_class, argument_default or conflict_handler yet
-
             ArgumentParser(ArgumentParser* parser);
-
             ArgumentParser(const char* prog, const char* usage, const char* description, const char* epilog);
 
             char* getPrefixChars();
@@ -238,14 +246,9 @@ namespace argparse{
             Garbage* getGarbage();
             void setGarbage(Garbage* garbage);
 
-            int add_argument(const char* flags, const char* action, int nargs, undefined_type constant, undefined_type default_value, const char* type, int nchoices, undefined_type* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
-
             int add_argument(const char* flags, const char* action, int nargs, int constant, int default_value, const char* type, int nchoices, int* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
-
             int add_argument(const char* flags, const char* action, int nargs, float constant, float default_value, const char* type, int nchoices, float* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
-
             int add_argument(const char* flags, const char* action, int nargs, double constant, double default_value, const char* type, int nchoices, double* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
-
             int add_argument(const char* flags, const char* action, int nargs, const char* constant, const char* default_value, const char* type, int nchoices, const char* choices[], bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
 
             Argument* get_Nth_argument(int n);
@@ -254,26 +257,8 @@ namespace argparse{
             
             Subparser* get_Nth_subparser(int n);
 
-            ParsedArguments* prepare_subparsers_in_parsed_args(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
-
-            ParsedArguments* parse_subparsers(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
-
-            ParsedArguments* prepare_arguments_in_parsed_args(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
-
-            ParsedArguments* parse_arguments(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
-
             ParsedArguments* parse_args(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
-
-            int print_help();
-
-            int print_version();
     };
-
-    // struct ArgumentParserArgs{
-    //     char* prog = "Program Name";
-    //     char* description = "What the program does";
-    //     char* epilog = "Text at the bottom of help";
-    // };
 
     Garbage::Garbage(){
         this->length = 0;
@@ -321,13 +306,10 @@ namespace argparse{
     }
 
     int Garbage::order_66(){
-        // printf("start order 66\n");
         for(int i = 0; i < this->length; i++){
-            // printf("(%d/%d) : %lld\n", i, this->length, this->garbage_can[i]);
             free(this->garbage_can[i]);
         }
         free(this->garbage_can);
-        // printf("end order 66\n");
 
         return 0;
     }
@@ -392,6 +374,7 @@ namespace argparse{
                             printf("%s", this->values[i].undefined_object[j]._string);
                             break;
                     }
+                    printf("\t");
                 }
             }
             printf("\n");
@@ -607,8 +590,6 @@ namespace argparse{
             this->type = alloc_and_copy_string(type);
             this->parent_parser->getGarbage()->throw_away(this->type);
         }
-        // this->nchoices = nchoices;
-        // no choices management for now
         this->nchoices = nchoices;
         this->choices = choices;
         this->required = required;

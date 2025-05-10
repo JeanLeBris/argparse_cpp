@@ -58,8 +58,6 @@ int main(int argc, char** argv){
     parser_6->add_argument("-d --argument-d", "store", 1, NULL, NULL, "string", 3, choices3, false, "fourth argument", "metavar", NULL, 0);
     parser_6->add_argument("-e --argument-e", "store", 1, "cst", "def2", "string", 0, NULL, false, "fifth argument", "metavar", NULL, 0);
 
-
-
     subparser_2 = parser_6->add_subparsers("tit3", NULL, NULL, NULL, NULL, true, NULL, NULL);
     subparser_2->add_parser("1", "help of d");
     subparser_2->add_parser("2", "help of e");
@@ -67,26 +65,6 @@ int main(int argc, char** argv){
     subparser_2->add_parser("4", "help of g");
 
 
-    
-    // // Display the main parser's help
-    // print_padding_characters(0, 80, '#');
-    // printf("\n# First parser's help");
-    // print_padding_characters("# First parser's help", 79, ' ');
-    // printf("#\n");
-    // print_padding_characters(0, 80, '#');
-    // printf("\n");
-    // parser.print_help();
-
-    // // Display the third parser of the second sub-parser' help
-    // print_padding_characters(0, 80, '#');
-    // printf("\n# Third parser of the second sub-parser' help");
-    // print_padding_characters("# Third parser of the second sub-parser' help", 79, ' ');
-    // printf("#\n");
-    // print_padding_characters(0, 80, '#');
-    // printf("\n");
-    // parser_6->print_help();
-
-    // parser_6->print_version();
 
     argparse::ParsedArguments* parsed_args = parser.parse_args(argc, argv);
 
@@ -94,6 +72,8 @@ int main(int argc, char** argv){
 
     parser.getGarbage()->order_66();
     free(parser.getGarbage());
+
+    printf("Processing the arguments finished successfully\n");
 
     return 0;
 }

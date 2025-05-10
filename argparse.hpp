@@ -191,8 +191,6 @@ namespace argparse{
 
     class ArgumentParser{
         private:
-
-        public:
             char* prog;
             bool is_usage_auto;
             char* usage;
@@ -225,6 +223,7 @@ namespace argparse{
             int arg_help_max_length;
             int arg_choices_max_length;
 
+        public:
             void init(const char* prog, const char* usage, const char* description, const char* epilog, ArgumentParser* parents, const char* prefix_chars, const char* fromfile_prefix_chars, const char* version, bool add_help, bool allow_abbrev, bool exit_on_error); // no formatter_class, argument_default or conflict_handler yet
             
             ArgumentParser(const char* prog, const char* usage, const char* description, const char* epilog, ArgumentParser* parents, const char* prefix_chars, const char* fromfile_prefix_chars, const char* version, bool add_help, bool allow_abbrev, bool exit_on_error); // no formatter_class, argument_default or conflict_handler yet
@@ -232,6 +231,12 @@ namespace argparse{
             ArgumentParser(ArgumentParser* parser);
 
             ArgumentParser(const char* prog, const char* usage, const char* description, const char* epilog);
+
+            char* getPrefixChars();
+            void setPrefixChars(char* prefix_chars);
+
+            Garbage* getGarbage();
+            void setGarbage(Garbage* garbage);
 
             int add_argument(const char* flags, const char* action, int nargs, undefined_type constant, undefined_type default_value, const char* type, int nchoices, undefined_type* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
 
@@ -506,7 +511,7 @@ namespace argparse{
         }
         this->is_positional_argument = false;
         for(int i = 0; i < strlen(flags); i++){ // look at wtf happens here
-            if(strchr(parser->prefix_chars, flags[i]) == NULL){
+            if(strchr(parser->getPrefixChars(), flags[i]) == NULL){
                 this->is_positional_argument = true;
             }
             while(flags[i] != ' ' && flags[i] != '\0'){
@@ -518,14 +523,14 @@ namespace argparse{
             exit(1);
         }
         this->flags = alloc_and_copy_string(flags);
-        this->parent_parser->garbage->throw_away(this->flags);
+        this->parent_parser->getGarbage()->throw_away(this->flags);
         if(action == NULL){
             this->action = alloc_and_copy_string("store");
-            this->parent_parser->garbage->throw_away(this->action);
+            this->parent_parser->getGarbage()->throw_away(this->action);
         }
         else{
             this->action = alloc_and_copy_string(action);
-            this->parent_parser->garbage->throw_away(this->action);
+            this->parent_parser->getGarbage()->throw_away(this->action);
         }
         if(strcmp(this->action, "store") == 0){
             
@@ -535,33 +540,33 @@ namespace argparse{
             this->constant = constant;
             this->default_value = default_value;
             this->type = alloc_and_copy_string(type);
-            this->parent_parser->garbage->throw_away(this->type);
+            this->parent_parser->getGarbage()->throw_away(this->type);
         }
         else if(strcmp(this->action, "store_true") == 0){
             address_ptr = this->action;
             free(this->action);
             this->action = alloc_and_copy_string("store_const");
-            this->parent_parser->garbage->recycle(address_ptr, this->action);
+            this->parent_parser->getGarbage()->recycle(address_ptr, this->action);
             // this->parent_parser->garbage->throw_away(this->action);
             this->nargs = 0;
             this->default_value._bool = false;
             this->constant._bool = true;
             store_true_false = true;
             this->type = alloc_and_copy_string("bool");
-            this->parent_parser->garbage->throw_away(this->type);
+            this->parent_parser->getGarbage()->throw_away(this->type);
         }
         else if(strcmp(this->action, "store_false") == 0){
             address_ptr = this->action;
             free(this->action);
             this->action = alloc_and_copy_string("store_const");
-            this->parent_parser->garbage->recycle(address_ptr, this->action);
+            this->parent_parser->getGarbage()->recycle(address_ptr, this->action);
             // this->parent_parser->garbage->throw_away(this->action);
             this->nargs = 0;
             this->default_value._bool = true;
             this->constant._bool = false;
             store_true_false = true;
             this->type = alloc_and_copy_string("bool");
-            this->parent_parser->garbage->throw_away(this->type);
+            this->parent_parser->getGarbage()->throw_away(this->type);
         }
         // else if(strcmp(this->action, "append") == 0){
             
@@ -581,7 +586,7 @@ namespace argparse{
             this->constant._bool = true;
             store_true_false = true;
             this->type = alloc_and_copy_string("bool");
-            this->parent_parser->garbage->throw_away(this->type);
+            this->parent_parser->getGarbage()->throw_away(this->type);
         }
         else if(strcmp(this->action, "version") == 0){
             this->nargs = 0;
@@ -589,7 +594,7 @@ namespace argparse{
             this->constant._bool = true;
             store_true_false = true;
             this->type = alloc_and_copy_string("bool");
-            this->parent_parser->garbage->throw_away(this->type);
+            this->parent_parser->getGarbage()->throw_away(this->type);
         }
         else{
             printf("The action argument value must be a correct value or none at all");
@@ -600,7 +605,7 @@ namespace argparse{
             this->constant = constant;
             this->default_value = default_value;
             this->type = alloc_and_copy_string(type);
-            this->parent_parser->garbage->throw_away(this->type);
+            this->parent_parser->getGarbage()->throw_away(this->type);
         }
         // this->nchoices = nchoices;
         // no choices management for now
@@ -608,19 +613,19 @@ namespace argparse{
         this->choices = choices;
         this->required = required;
         this->help = alloc_and_copy_string(help);
-        this->parent_parser->garbage->throw_away(this->help);
+        this->parent_parser->getGarbage()->throw_away(this->help);
         this->metavar = alloc_and_copy_string(metavar);
-        this->parent_parser->garbage->throw_away(this->metavar);
+        this->parent_parser->getGarbage()->throw_away(this->metavar);
         if(dest == NULL){
             char_ptr = this->flags;
             for(char_ptr = this->flags; strchr(char_ptr, ' ') != NULL; char_ptr = strchr(char_ptr, ' ') + 1);
-            for(char_ptr = char_ptr; strchr(parser->prefix_chars, *char_ptr) != NULL; char_ptr++);
+            for(char_ptr = char_ptr; strchr(parser->getPrefixChars(), *char_ptr) != NULL; char_ptr++);
             this->dest = alloc_and_copy_string(char_ptr);
-            this->parent_parser->garbage->throw_away(this->dest);
+            this->parent_parser->getGarbage()->throw_away(this->dest);
         }
         else{
             this->dest = alloc_and_copy_string(dest);
-            this->parent_parser->garbage->throw_away(this->dest);
+            this->parent_parser->getGarbage()->throw_away(this->dest);
         }
         this->deprecated = deprecated;
 
@@ -744,20 +749,20 @@ namespace argparse{
                          const char* metavar){
         this->parent_parser = parent_parser;
         this->title = alloc_and_copy_string(title);
-        this->parent_parser->garbage->throw_away(this->title);
+        this->parent_parser->getGarbage()->throw_away(this->title);
         this->description = alloc_and_copy_string(description);
-        this->parent_parser->garbage->throw_away(this->description);
+        this->parent_parser->getGarbage()->throw_away(this->description);
         this->prog = alloc_and_copy_string(prog);
-        this->parent_parser->garbage->throw_away(this->prog);
+        this->parent_parser->getGarbage()->throw_away(this->prog);
         this->action = alloc_and_copy_string(action);
-        this->parent_parser->garbage->throw_away(this->action);
+        this->parent_parser->getGarbage()->throw_away(this->action);
         this->dest = alloc_and_copy_string(dest);
-        this->parent_parser->garbage->throw_away(this->dest);
+        this->parent_parser->getGarbage()->throw_away(this->dest);
         this->required = required;
         this->help = alloc_and_copy_string(help);
-        this->parent_parser->garbage->throw_away(this->help);
+        this->parent_parser->getGarbage()->throw_away(this->help);
         this->metavar = alloc_and_copy_string(metavar);
-        this->parent_parser->garbage->throw_away(this->metavar);
+        this->parent_parser->getGarbage()->throw_away(this->metavar);
 
         this->n_parsers = 0;
         
@@ -834,9 +839,9 @@ namespace argparse{
     */
     ArgumentParser* Subparser::add_parser(const char* sub_command, const char* help){
         SubparserElement* subparser_element = new SubparserElement();
-        this->parent_parser->garbage->throw_away(subparser_element);
+        this->parent_parser->getGarbage()->throw_away(subparser_element);
         subparser_element->parser = new ArgumentParser(this->parent_parser);
-        this->parent_parser->garbage->throw_away(subparser_element->parser);
+        this->parent_parser->getGarbage()->throw_away(subparser_element->parser);
         subparser_element->parent_subparser = this;
         // subparser_element->sub_command = NULL;
         if(sub_command == NULL){
@@ -844,10 +849,10 @@ namespace argparse{
             exit(1);
         }
         subparser_element->sub_command = alloc_and_copy_string(sub_command);
-        this->parent_parser->garbage->throw_away(subparser_element->sub_command);
+        this->parent_parser->getGarbage()->throw_away(subparser_element->sub_command);
         // subparser_element->help = NULL;
         subparser_element->help = alloc_and_copy_string(help);
-        this->parent_parser->garbage->throw_away(subparser_element->help);
+        this->parent_parser->getGarbage()->throw_away(subparser_element->help);
         subparser_element->previous = NULL;
         subparser_element->next = NULL;
         
@@ -1018,6 +1023,22 @@ namespace argparse{
                                    const char* description,
                                    const char* epilog){
         init(prog, usage, description, epilog, NULL, "-", NULL, "0.0.0", true, true, true);
+    }
+
+    char* ArgumentParser::getPrefixChars(){
+        return this->prefix_chars;
+    }
+
+    void ArgumentParser::setPrefixChars(char* prefix_chars){
+        this->prefix_chars = prefix_chars;
+    }
+
+    Garbage* ArgumentParser::getGarbage(){
+        return this->garbage;
+    }
+
+    void ArgumentParser::setGarbage(Garbage* garbage){
+        this->garbage = garbage;
     }
 
     /**

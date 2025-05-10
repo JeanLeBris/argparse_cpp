@@ -92,8 +92,8 @@ int main(int argc, char** argv){
 
     parsed_args->print_keys_and_values();
 
-    parser.garbage->order_66();
-    free(parser.garbage);
+    parser.getGarbage()->order_66();
+    free(parser.getGarbage());
 
     return 0;
 }

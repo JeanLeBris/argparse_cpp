@@ -47,8 +47,8 @@ int main(int argc, char** argv){
     argparse::ParsedArguments* parsed_args = parser.parse_args(argc, argv);
     parsed_args->print_keys_and_values();
 
-    parser.garbage->order_66();
-    free(parser.garbage);
+    parser.getGarbage()->order_66();
+    free(parser.getGarbage());
 
     return 0;
 }

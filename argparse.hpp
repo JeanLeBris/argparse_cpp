@@ -21,7 +21,7 @@ namespace argparse{
         float _float;
         double _double;
         char* _string;
-        undefined_type* undefined_object;
+        undefined_type* _array;
     };
 
     struct SubparserElement{
@@ -361,19 +361,19 @@ namespace argparse{
                 for(int j = 0; j < this->number_of_values[i]; j++){
                     switch(this->type_of_value[i]){
                         case _int:
-                            printf("%d", this->values[i].undefined_object[j]._int);
+                            printf("%d", this->values[i]._array[j]._int);
                             break;
                         case _float:
-                            printf("%f", this->values[i].undefined_object[j]._float);
+                            printf("%f", this->values[i]._array[j]._float);
                             break;
                         case _double:
-                            printf("%f", this->values[i].undefined_object[j]._double);
+                            printf("%f", this->values[i]._array[j]._double);
                             break;
                         case _bool:
-                            printf(this->values[i].undefined_object[j]._bool == true ? "true" : "false");
+                            printf(this->values[i]._array[j]._bool == true ? "true" : "false");
                             break;
                         case _string:
-                            printf("%s", this->values[i].undefined_object[j]._string);
+                            printf("%s", this->values[i]._array[j]._string);
                             break;
                     }
                     printf("\t");
@@ -448,8 +448,8 @@ namespace argparse{
         }
 
         if(this->number_of_values[id] > 1){
-            this->garbage->recycle(this->values[id].undefined_object, NULL);
-            free(this->values[id].undefined_object);
+            this->garbage->recycle(this->values[id]._array, NULL);
+            free(this->values[id]._array);
         }
 
         this->number_of_values[id] = number_of_values;
@@ -474,7 +474,7 @@ namespace argparse{
             return 1;
         }
 
-        this->values[id].undefined_object[id_of_value] = value;
+        this->values[id]._array[id_of_value] = value;
 
         return 0;
     }
@@ -1464,10 +1464,10 @@ namespace argparse{
                         parsed_args->add_argument(argument_ptr->getDest(), 1, argument_ptr->getDefaultValue(), argument_ptr->getType());
                     }
                     else{
-                        parsed_arg_value.undefined_object = (undefined_type*) malloc(sizeof(undefined_type) * argument_ptr->getNargs());
-                        this->garbage->throw_away(parsed_arg_value.undefined_object);
+                        parsed_arg_value._array = (undefined_type*) malloc(sizeof(undefined_type) * argument_ptr->getNargs());
+                        this->garbage->throw_away(parsed_arg_value._array);
                         for(int k = 0; k < argument_ptr->getNargs(); k++){
-                            parsed_arg_value.undefined_object[k] = argument_ptr->getDefaultValue();
+                            parsed_arg_value._array[k] = argument_ptr->getDefaultValue();
                         }
                         parsed_args->add_argument(argument_ptr->getDest(), argument_ptr->getNargs(), parsed_arg_value, argument_ptr->getType());
                     }
@@ -1482,10 +1482,10 @@ namespace argparse{
                     parsed_args->add_argument(argument_ptr->getDest(), 1, argument_ptr->getDefaultValue(), argument_ptr->getType());
                 }
                 else{
-                    parsed_arg_value.undefined_object = (undefined_type*) malloc(sizeof(undefined_type) * argument_ptr->getNargs());
-                    this->garbage->throw_away(parsed_arg_value.undefined_object);
+                    parsed_arg_value._array = (undefined_type*) malloc(sizeof(undefined_type) * argument_ptr->getNargs());
+                    this->garbage->throw_away(parsed_arg_value._array);
                     for(int k = 0; k < argument_ptr->getNargs(); k++){
-                        parsed_arg_value.undefined_object[k] = argument_ptr->getDefaultValue();
+                        parsed_arg_value._array[k] = argument_ptr->getDefaultValue();
                     }
                     parsed_args->add_argument(argument_ptr->getDest(), argument_ptr->getNargs(), parsed_arg_value, argument_ptr->getType());
                 }

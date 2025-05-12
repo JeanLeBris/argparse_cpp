@@ -37,7 +37,6 @@ int main(int argc, char** argv){
     parser.add_argument("-c --argument-c", "store_true", 1, "cst", "def2", "string", 0, NULL, false, "third argument", "metavar", NULL, 0);
 
     // // Declare a first sub-parser and 3 parsers under it
-    // argparse::Subparser* subparser_1 = parser.add_subparsers("tit1", NULL, NULL, NULL, NULL, true, "help of subparser 1", NULL);
     argparse::Subparser* subparser_1 = parser.add_subparsers("tit1", NULL, NULL, NULL, NULL, true, "help of subparser 1", NULL);
 
     auto parser_1 = subparser_1->add_parser("a", NULL);
@@ -45,8 +44,8 @@ int main(int argc, char** argv){
     auto parser_3 = subparser_1->add_parser("c", "help of c");
     
     // Declare a second sub-parser and 4 parsers under it
-    // argparse::Subparser* subparser_2 = parser.add_subparsers("tit2", NULL, NULL, NULL, NULL, true, NULL, NULL);
-    argparse::Subparser* subparser_2 = parser.add_subparsers("tit2", NULL, NULL, NULL, NULL, true, "help of subparser 2", NULL);
+    argparse::Subparser* subparser_2 = parser.add_subparsers("tit2", NULL, NULL, NULL, NULL, true, NULL, NULL);
+    // argparse::Subparser* subparser_2 = parser.add_subparsers("tit2", NULL, NULL, NULL, NULL, true, "help of subparser 2", NULL);
 
     auto parser_4 = subparser_2->add_parser("d", "help of d");
     auto parser_5 = subparser_2->add_parser("e", "help of e");

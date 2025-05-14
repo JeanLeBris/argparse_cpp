@@ -506,14 +506,13 @@ namespace argparse{
         this->parent_parser = parser;
         bool store_true_false = false;
         char* char_ptr = NULL;
-        char* string_copy = NULL;
         void* address_ptr = NULL;
         if(flags == NULL){
             printf("Flags are necessary to declare a new argument");
             exit(1);
         }
         this->is_positional_argument = false;
-        for(int i = 0; i < strlen(flags); i++){ // look at wtf happens here
+        for(int i = 0; i < (int) strlen(flags); i++){ // look at wtf happens here
             if(strchr(parser->getPrefixChars(), flags[i]) == NULL){
                 this->is_positional_argument = true;
             }
@@ -735,7 +734,7 @@ namespace argparse{
     }
 
     void Argument::setChoices(undefined_type* choices){
-        this->choices;
+        this->choices = choices;
     }
     
     Subparser::Subparser(ArgumentParser* parent_parser,
@@ -1094,9 +1093,9 @@ namespace argparse{
         int flag_size = 0;
         if(this->is_usage_auto){
             usage_buffer = this->usage;
-            for(flag_size = 0; flag_size < strlen(flags) && flags[flag_size] != ' '; flag_size++);
+            for(flag_size = 0; flag_size < (int) strlen(flags) && flags[flag_size] != ' '; flag_size++);
             flag = (char*) malloc(sizeof(char) * (flag_size + 1));
-            for(flag_size = 0; flag_size < strlen(flags) && flags[flag_size] != ' '; flag_size++){
+            for(flag_size = 0; flag_size < (int) strlen(flags) && flags[flag_size] != ' '; flag_size++){
                 flag[flag_size] = flags[flag_size];
             }
             flag[flag_size] = '\0';
@@ -1400,13 +1399,9 @@ namespace argparse{
             *subparser_element_array = (SubparserElement**) malloc(sizeof(SubparserElement*) * 0);
         }
         SubparserElement* subparser_element_ptr = NULL;
-        bool required = false;
         bool found = false;
         bool stopping = false;
         char* instance_ptr = NULL;
-        char* key = NULL;
-        char* value = NULL;
-        undefined_type* values = NULL;
 
         for(int i = 1; i < argc && !stopping; i++){ // read every arguments
             if(!args_processed[i]){
@@ -1414,7 +1409,6 @@ namespace argparse{
                 char_ptr = argv[i];
                 for(int j = 0; j < this->n_subparsers; j++){ // read in each subparsers
                     subparser_ptr = this->get_Nth_subparser(j);
-                    required = subparser_ptr->getRequired();
                     for(int k = 0; k < subparser_ptr->getNparsers(); k++){ // read in each subparsers' parsers
                         subparser_element_ptr = subparser_ptr->get_Nth_subparser_element(k);
                         if((instance_ptr = strstr(subparser_element_ptr->sub_command, char_ptr)) != NULL){
@@ -1450,7 +1444,6 @@ namespace argparse{
     ParsedArguments* ArgumentParser::prepare_arguments_in_parsed_args(int argc, char** argv, ParsedArguments* parsed_args, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array){
         Argument* argument_ptr = NULL;
         SubparserElement* subparser_element_ptr = NULL;
-        char* char_ptr = NULL;
         undefined_type parsed_arg_value;
 
         for(int i = *subparser_element_array_length - 1; i >= 0; i--){ // read in each subparsers' parsers
@@ -1507,7 +1500,6 @@ namespace argparse{
             }
         }
         char* char_ptr = NULL;
-        Subparser* subparser_ptr = NULL;
         if(subparser_element_array == NULL){
             subparser_element_array_length = (int*) malloc(sizeof(int) * 1);
             *subparser_element_array_length = 0;
@@ -1516,13 +1508,8 @@ namespace argparse{
         }
         SubparserElement* subparser_element_ptr = NULL;
         Argument* argument_ptr = NULL;
-        bool required = false;
         bool found = false;
         bool stopping = false;
-        char* instance_ptr = NULL;
-        char* key = NULL;
-        char* value = NULL;
-        undefined_type* values = NULL;
         undefined_type value_buffer;
         char* flag_ptr = NULL;
 
@@ -1640,21 +1627,12 @@ namespace argparse{
                 args_processed[i] = false;
             }
         }
-        char* char_ptr = NULL;
-        Subparser* subparser_ptr = NULL;
         if(subparser_element_array == NULL){
             subparser_element_array_length = (int*) malloc(sizeof(int) * 1);
             *subparser_element_array_length = 0;
             subparser_element_array = (SubparserElement***) malloc(sizeof(SubparserElement**) * 1);
             *subparser_element_array = (SubparserElement**) malloc(sizeof(SubparserElement*) * 0);
         }
-        SubparserElement* subparser_element_ptr = NULL;
-        bool required = false;
-        bool found = false;
-        bool stopping = false;
-        char* instance_ptr = NULL;
-        char* key = NULL;
-        char* value = NULL;
 
         parsed_args = this->prepare_subparsers_in_parsed_args(argc, argv, parsed_args, args_processed, subparser_element_array_length, subparser_element_array);
 
@@ -1693,39 +1671,39 @@ namespace argparse{
         char string_buffer[20] = "";
 
         for(Argument* argument = this->first_argument; argument != NULL; argument = argument->getNext()){
-            if(strlen(argument->getFlags()) > arg_flags_max_length){
+            if((int) strlen(argument->getFlags()) > arg_flags_max_length){
                 arg_flags_max_length = strlen(argument->getFlags());
             }
             if(argument->getType() == _string){
-                if(argument->getDefaultValue()._string != NULL && strlen(argument->getDefaultValue()._string) > arg_default_value_max_length){
+                if(argument->getDefaultValue()._string != NULL && (int) strlen(argument->getDefaultValue()._string) > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(argument->getDefaultValue()._string);
                 }
             }
             else if(argument->getType() == _int){
                 // itoa(argument->getDefaultValue()._int, string_buffer, 10);
                 snprintf(string_buffer, 19, "%d", argument->getDefaultValue()._int);
-                if(strlen(string_buffer) > arg_default_value_max_length){
+                if((int) strlen(string_buffer) > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(string_buffer);
                 }
             }
             else if(argument->getType() == _float){
                 gcvt(argument->getDefaultValue()._float, 10, string_buffer);
-                if(strlen(string_buffer) > arg_default_value_max_length){
+                if((int) strlen(string_buffer) > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(string_buffer);
                 }
             }
             else if(argument->getType() == _double){
                 gcvt(argument->getDefaultValue()._double, 10, string_buffer);
-                if(strlen(string_buffer) > arg_default_value_max_length){
+                if((int) strlen(string_buffer) > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(string_buffer);
                 }
             }
             else if(argument->getType() == _bool){
-                if(strlen(argument->getDefaultValue()._bool ? "True" : "False") > arg_default_value_max_length){
+                if((int) strlen(argument->getDefaultValue()._bool ? "True" : "False") > arg_default_value_max_length){
                     arg_default_value_max_length = strlen(argument->getDefaultValue()._bool ? "True" : "False");
                 }
             }
-            if(strlen(argument->getHelp()) > arg_help_max_length){
+            if((int) strlen(argument->getHelp()) > arg_help_max_length){
                 arg_help_max_length = strlen(argument->getHelp());
             }
         }
@@ -1780,25 +1758,25 @@ namespace argparse{
                 if(argument->getChoices() != NULL && argument->getType() == _string){
                     // printf("");
                     for(int i = 0; i < argument->getNchoices(); i++){
-                        printf("%s ", argument->getChoices()[i]);
+                        printf("%s ", argument->getChoices()[i]._string);
                     }
                 }
                 else if(argument->getChoices() != NULL && argument->getType() == _int){
                     // printf("");
                     for(int i = 0; i < argument->getNchoices(); i++){
-                        printf("%d ", argument->getChoices()[i]);
+                        printf("%d ", argument->getChoices()[i]._int);
                     }
                 }
                 else if(argument->getChoices() != NULL && argument->getType() == _float){
                     // printf("");
                     for(int i = 0; i < argument->getNchoices(); i++){
-                        printf("%f ", argument->getChoices()[i]);
+                        printf("%f ", argument->getChoices()[i]._float);
                     }
                 }
                 else if(argument->getChoices() != NULL && argument->getType() == _double){
                     // printf("");
                     for(int i = 0; i < argument->getNchoices(); i++){
-                        printf("%f ", argument->getChoices()[i]);
+                        printf("%f ", argument->getChoices()[i]._double);
                     }
                 }
                 printf("\n");

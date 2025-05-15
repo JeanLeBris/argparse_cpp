@@ -226,6 +226,8 @@ namespace argparse{
             ArgumentParser(ArgumentParser* parser);
             ArgumentParser(const char* prog, const char* usage, const char* description, const char* epilog);
 
+            ~ArgumentParser();
+
             char* getPrefixChars();
             void setPrefixChars(char* prefix_chars);
 
@@ -953,6 +955,11 @@ namespace argparse{
                                    const char* description,
                                    const char* epilog){
         init(prog, usage, description, epilog, NULL, "-", NULL, "0.0.0", true, true, true);
+    }
+
+    ArgumentParser::~ArgumentParser(){
+        this->garbage->order_66();
+        free(this->garbage);
     }
 
     char* ArgumentParser::getPrefixChars(){

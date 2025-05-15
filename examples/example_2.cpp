@@ -38,10 +38,8 @@ int main(int argc, char** argv){
 
     
     argparse::ParsedArguments* parsed_args = parser.parse_args(argc, argv);
+    
     parsed_args->print_keys_and_values();
-
-    parser.getGarbage()->order_66();
-    free(parser.getGarbage());
 
     printf("Processing the arguments finished successfully\n");
 

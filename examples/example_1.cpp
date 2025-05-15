@@ -69,9 +69,6 @@ int main(int argc, char** argv){
 
     parsed_args->print_keys_and_values();
 
-    parser.getGarbage()->order_66();
-    free(parser.getGarbage());
-
     printf("Processing the arguments finished successfully\n");
 
     return 0;

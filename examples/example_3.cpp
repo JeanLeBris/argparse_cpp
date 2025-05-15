@@ -33,12 +33,12 @@ int main(int argc, char** argv){
     auto parser_1 = subparser_1->add_parser("a", NULL);
     auto parser_2 = subparser_1->add_parser("b", "help of b");
     auto parser_3 = subparser_1->add_parser("c", "help of c");
+
+    
     
     auto parsed_args = parser.parse_args(argc, argv);
-    parsed_args->print_keys_and_values();
 
-    parser.getGarbage()->order_66();
-    free(parser.getGarbage());
+    parsed_args->print_keys_and_values();
 
     printf("Processing the arguments finished successfully\n");
 

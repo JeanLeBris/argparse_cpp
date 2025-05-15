@@ -1,0 +1,3 @@
+[submodule "lib/deallocator"]
+	path = lib/deallocator
+	url = https://github.com/JeanLeBris/deallocator_cpp.git

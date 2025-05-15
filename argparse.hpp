@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string.h>
 #include "./lib/utils.hpp"
+#include "./lib/deallocator/deallocator.hpp"
 
 namespace argparse{
     class Argument;
@@ -34,23 +35,6 @@ namespace argparse{
         SubparserElement* next;
     };
 
-    class Garbage{
-        private:
-            int length;
-            int bag_size;
-            int garbage_can_size;
-            void** garbage_can;
-
-        public:
-            Garbage();
-
-            int throw_away(void* variable);
-
-            int recycle(void* old_variale, void* new_variable);
-
-            int order_66();
-    };
-
     class ParsedArguments{
         private:
             char** keys;
@@ -58,10 +42,10 @@ namespace argparse{
             int* number_of_values;
             type* type_of_value;
             int length;
-            Garbage* garbage;
+            deallocator::Garbage* garbage;
 
         public:
-            ParsedArguments(Garbage* garbage);
+            ParsedArguments(deallocator::Garbage* garbage);
 
             int add_argument(char* key, int number_of_values, undefined_type values, type type_of_value);
 
@@ -209,7 +193,7 @@ namespace argparse{
             bool allow_abbrev;
             bool exit_on_error;
 
-            Garbage* garbage;
+            deallocator::Garbage* garbage;
 
             int n_arguments;
             int n_subparsers;
@@ -245,8 +229,8 @@ namespace argparse{
             char* getPrefixChars();
             void setPrefixChars(char* prefix_chars);
 
-            Garbage* getGarbage();
-            void setGarbage(Garbage* garbage);
+            deallocator::Garbage* getGarbage();
+            void setGarbage(deallocator::Garbage* garbage);
 
             int add_argument(const char* flags, const char* action, int nargs, int constant, int default_value, const char* type, int nchoices, int* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
             int add_argument(const char* flags, const char* action, int nargs, float constant, float default_value, const char* type, int nchoices, float* choices, bool required, const char* help, const char* metavar, const char* dest, bool deprecated);
@@ -262,61 +246,7 @@ namespace argparse{
             ParsedArguments* parse_args(int argc, char** argv, ParsedArguments* parsed_arguments, bool* args_processed, int* subparser_element_array_length, SubparserElement*** subparser_element_array);
     };
 
-    Garbage::Garbage(){
-        this->length = 0;
-        this->bag_size = 100;
-        this->garbage_can_size = 0;
-        this->garbage_can = NULL;
-    }
-
-    int Garbage::throw_away(void* variable){
-        if(variable != NULL){
-            if(this->length == this->garbage_can_size){
-                this->garbage_can = (void**) realloc(this->garbage_can, sizeof(void*) * (this->garbage_can_size + this->bag_size));
-                this->garbage_can_size += this->bag_size;
-            }
-
-            this->garbage_can[this->length] = variable;
-            this->length++;
-        }
-
-        return 0;
-    }
-
-    int Garbage::recycle(void* old_variable, void* new_variable){
-        bool found = false;
-
-        if(old_variable == NULL){
-            this->throw_away(new_variable);
-        }
-        else{
-            // if(new_variable != NULL){
-            if(true){
-                for(int i = 0; i < this->length && !found; i++){
-                    if(old_variable == garbage_can[i]){
-                        this->garbage_can[i] = new_variable;
-                        found = true;
-                    }
-                }
-                if(!found){
-                    this->throw_away(new_variable);
-                }
-            }
-        }
-
-        return 0;
-    }
-
-    int Garbage::order_66(){
-        for(int i = 0; i < this->length; i++){
-            free(this->garbage_can[i]);
-        }
-        free(this->garbage_can);
-
-        return 0;
-    }
-
-    ParsedArguments::ParsedArguments(Garbage* garbage){
+    ParsedArguments::ParsedArguments(deallocator::Garbage* garbage){
         this->keys = NULL;
         this->values = NULL;
         this->number_of_values = NULL;
@@ -896,7 +826,7 @@ namespace argparse{
                               bool exit_on_error){
         this->parents = parents;
         if(parents == NULL){
-            this->garbage = new Garbage();
+            this->garbage = new deallocator::Garbage();
         }
         else{
             this->garbage = parents->garbage;
@@ -1033,11 +963,11 @@ namespace argparse{
         this->prefix_chars = prefix_chars;
     }
 
-    Garbage* ArgumentParser::getGarbage(){
+    deallocator::Garbage* ArgumentParser::getGarbage(){
         return this->garbage;
     }
 
-    void ArgumentParser::setGarbage(Garbage* garbage){
+    void ArgumentParser::setGarbage(deallocator::Garbage* garbage){
         this->garbage = garbage;
     }
 

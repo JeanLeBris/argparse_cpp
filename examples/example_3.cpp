@@ -3,7 +3,6 @@
 
 using namespace std;
 
-
 int main(int argc, char** argv){
     // auto parser = argparse::ArgumentParser(argv[0], NULL, NULL, NULL);
 
@@ -29,15 +28,13 @@ int main(int argc, char** argv){
     parser.add_argument("-d --argument-d", "store", 3, 2.1, 1.9, "double", 0, NULL, false, "fourth argument", "metavar", NULL, 0);
     
     // Declare a first sub-parser and 3 parsers under it
-    argparse::Subparser* subparser_1 = parser.add_subparsers("tit1", NULL, NULL, NULL, NULL, true, "help of subparser 1", NULL);
+    auto subparser_1 = parser.add_subparsers("tit1", NULL, NULL, NULL, NULL, true, "help of subparser 1", NULL);
 
     auto parser_1 = subparser_1->add_parser("a", NULL);
     auto parser_2 = subparser_1->add_parser("b", "help of b");
     auto parser_3 = subparser_1->add_parser("c", "help of c");
     
-
-    
-    argparse::ParsedArguments* parsed_args = parser.parse_args(argc, argv);
+    auto parsed_args = parser.parse_args(argc, argv);
     parsed_args->print_keys_and_values();
 
     parser.getGarbage()->order_66();

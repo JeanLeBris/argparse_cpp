@@ -3,6 +3,10 @@
 #include "./lib/utils.hpp"
 #include "./lib/deallocator/deallocator.hpp"
 
+/**
+ * The Argparse library, for C++
+ */
+
 namespace argparse{
     class Argument;
     class Subparser;

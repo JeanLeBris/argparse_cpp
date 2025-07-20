@@ -9,7 +9,7 @@ OBJNAMES= $(SRCNAMES:.cpp=.o)
 export OBJDIR=obj
 OBJ= $(foreach objname, $(OBJNAMES), $(OBJDIR)/$(objname))
 export BINDIR=bin
-# DEPENDENCIES= deallocator
+export DEPENDENCIES= deallocator
 
 EXAMPLESDIR=examples
 # EXAMPLENAMES= example_1.cpp example_2.cpp example_3.cpp
@@ -28,8 +28,22 @@ export RMFILE
 export COPYFILE
 export SHARED_LIBRARY_EXT
 
+ifeq ($(LIBRARY_TYPE), shared)
+else
+	ifeq ($(LIBRARY_TYPE), static)
+	else
+		LIBRARY_TYPE=shared
+	endif
+endif
+export LIBRARY_TYPE
+
 compile:bin obj update $(OBJNAMES)
+ifeq ($(LIBRARY_TYPE), shared)
 	$(CC) -fpic -shared $(OBJ) -L $(BINDIR) -l deallocator -o $(BINDIR)/lib$(EXEC).$(SHARED_LIBRARY_EXT)
+endif
+ifeq ($(LIBRARY_TYPE), static)
+	ar rcs $(BINDIR)/lib$(EXEC).a $(OBJ)
+endif
 
 examples:compile
 	@(cd $(EXAMPLESDIR) && $(MAKE) $@)

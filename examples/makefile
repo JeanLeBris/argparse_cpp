@@ -8,8 +8,8 @@ examples: obj bin $(OBJNAMES)
 
 %.o:
 	$(CC) -c $(SRCDIR)/$(@:.o=.cpp) -o $(OBJDIR)/$@
-	$(CC) $(OBJDIR)/$@ -L  ../$(BINDIR) -l $(EXEC) -o $(BINDIR)/$(@:.o=.exe)
-# 	g++ ./obj/example_1.o -L ./bin -l argparse -o ./bin/example_1
+	$(CC) $(OBJDIR)/$@ -L  ../$(BINDIR) -l $(EXEC) -l $(DEPENDENCIES) -o $(BINDIR)/$(@:.o=.exe)
+# The "-l $(DEPENDENCIES)" should not be necessary in the case of a compilation with shared libraries, but it is necessary in the case of a compilation with static libraries
 
 .PHONY: examples
 

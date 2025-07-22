@@ -22,12 +22,15 @@ ifeq ($(OS), Windows_NT)
 	RMFILE= del /s /q
 	COPYFILE= copy
 	SHARED_LIBRARY_EXT= dll
+	FILE_SLASH=\\
+
 else
 ifeq ($(OS), Linux)
-        RMDIR= rmdir
-        RMFILE= rm
-        COPYFILE= cp
-        SHARED_LIBRARY_EXT= so
+	RMDIR= rmdir
+	RMFILE= rm
+	COPYFILE= cp
+	SHARED_LIBRARY_EXT= so
+	FILE_SLASH=/
 endif
 endif
 
@@ -35,6 +38,7 @@ export RMDIR
 export RMFILE
 export COPYFILE
 export SHARED_LIBRARY_EXT
+export FILE_SLASH
 
 ifeq ($(LIBRARY_TYPE), shared)
 else
@@ -63,7 +67,7 @@ update:
 # # 	ar rcs ./bin/libdeallocator.a ./obj/deallocator.o
 # 	$(CC) -fpic -shared ./obj/deallocator.o -o ./bin/libdeallocator.dll
 	@(cd ./lib/deallocator && $(MAKE) compile)
-	$(COPYFILE) ./lib/deallocator/bin/* bin
+	$(COPYFILE) .$(FILE_SLASH)lib$(FILE_SLASH)deallocator$(FILE_SLASH)bin$(FILE_SLASH)* bin
 
 %.o:
 	$(CC) -c $(SRCDIR)/$(@:.o=.cpp) -o $(OBJDIR)/$@
@@ -99,9 +103,9 @@ obj:
 	mkdir obj
 
 clean:
-	$(RMFILE) $(OBJDIR)/*
+	$(RMFILE) $(OBJDIR)$(FILE_SLASH)*
 	$(RMDIR) $(OBJDIR)
-	$(RMFILE) $(BINDIR)/*
+	$(RMFILE) $(BINDIR)$(FILE_SLASH)*
 	$(RMDIR) $(BINDIR)
 	@(cd $(EXAMPLESDIR) && $(MAKE) $@)
 	@(cd ./lib/deallocator && $(MAKE) $@)

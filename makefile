@@ -1,3 +1,4 @@
+export OS
 export CC=g++
 export CFLAGS=
 export LDFLAGS=
@@ -21,6 +22,13 @@ ifeq ($(OS), Windows_NT)
 	RMFILE= del /s /q
 	COPYFILE= copy
 	SHARED_LIBRARY_EXT= dll
+else
+ifeq ($(OS), Linux)
+        RMDIR= rmdir
+        RMFILE= rm
+        COPYFILE= cp
+        SHARED_LIBRARY_EXT= so
+endif
 endif
 
 export RMDIR
@@ -55,7 +63,7 @@ update:
 # # 	ar rcs ./bin/libdeallocator.a ./obj/deallocator.o
 # 	$(CC) -fpic -shared ./obj/deallocator.o -o ./bin/libdeallocator.dll
 	@(cd ./lib/deallocator && $(MAKE) compile)
-	$(COPYFILE) .\lib\deallocator\bin\* bin
+	$(COPYFILE) ./lib/deallocator/bin/* bin
 
 %.o:
 	$(CC) -c $(SRCDIR)/$(@:.o=.cpp) -o $(OBJDIR)/$@
@@ -91,9 +99,9 @@ obj:
 	mkdir obj
 
 clean:
-	$(RMFILE) $(OBJDIR)
+	$(RMFILE) $(OBJDIR)/*
 	$(RMDIR) $(OBJDIR)
-	$(RMFILE) $(BINDIR)
+	$(RMFILE) $(BINDIR)/*
 	$(RMDIR) $(BINDIR)
 	@(cd $(EXAMPLESDIR) && $(MAKE) $@)
 	@(cd ./lib/deallocator && $(MAKE) $@)

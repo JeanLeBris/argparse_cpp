@@ -4,7 +4,7 @@ OBJNAMES= $(SRCNAMES:.cpp=.o)
 OBJ= $(foreach objname, $(OBJNAMES), $(OBJDIR)/$(objname))
 
 examples: obj bin $(OBJNAMES)
-	$(COPYFILE) ..\$(BINDIR)\* .\$(BINDIR)
+	$(COPYFILE) ../$(BINDIR)/* ./$(BINDIR)
 
 %.o:
 	$(CC) -c $(SRCDIR)/$(@:.o=.cpp) -o $(OBJDIR)/$@
@@ -20,7 +20,7 @@ obj:
 	mkdir obj
 
 clean:
-	$(RMFILE) $(OBJDIR)
+	$(RMFILE) $(OBJDIR)/*
 	$(RMDIR) $(OBJDIR)
-	$(RMFILE) $(BINDIR)
+	$(RMFILE) $(BINDIR)/*
 	$(RMDIR) $(BINDIR)

@@ -51,7 +51,12 @@ export LIBRARY_TYPE
 
 compile:bin obj update $(OBJNAMES)
 ifeq ($(LIBRARY_TYPE), shared)
+ifeq ($(OS), Windows_NT)
 	$(CC) -fpic -shared $(OBJ) -L $(BINDIR) -l deallocator -o $(BINDIR)/lib$(EXEC).$(SHARED_LIBRARY_EXT)
+endif
+ifeq ($(OS), Linux)
+	$(CC) -shared $(OBJ) -L $(BINDIR) -l deallocator -o $(BINDIR)/lib$(EXEC).$(SHARED_LIBRARY_EXT)
+endif
 endif
 ifeq ($(LIBRARY_TYPE), static)
 	ar rcs $(BINDIR)/lib$(EXEC).a $(OBJ)
@@ -70,7 +75,17 @@ update:
 	$(COPYFILE) .$(FILE_SLASH)lib$(FILE_SLASH)deallocator$(FILE_SLASH)bin$(FILE_SLASH)* bin
 
 %.o:
+ifeq ($(LIBRARY_TYPE), shared)
+ifeq ($(OS), Windows_NT)
 	$(CC) -c $(SRCDIR)/$(@:.o=.cpp) -o $(OBJDIR)/$@
+endif
+ifeq ($(OS), Linux)
+	$(CC) -c -fpic $(SRCDIR)/$(@:.o=.cpp) -o $(OBJDIR)/$@
+endif
+endif
+ifeq ($(LIBRARY_TYPE), static)
+	$(CC) -c $(SRCDIR)/$(@:.o=.cpp) -o $(OBJDIR)/$@
+endif
 
 .PHONY: compile examples clean
 

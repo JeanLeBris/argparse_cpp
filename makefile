@@ -17,7 +17,16 @@ EXAMPLESDIR=examples
 # EXAMPLES= $(foreach examplename, $(EXAMPLENAMES), $(EXAMPLESDIR)/$(examplename))
 # EXAMPLESEXE= $(EXAMPLES:.cpp=.exe)
 
+ifeq ($(OS), Windows)
+	RMDIR= rmdir
+	RMFILE= del /s /q
+	COPYFILE= copy
+	SHARED_LIBRARY_EXT= dll
+	FILE_SLASH=\\
+
+else
 ifeq ($(OS), Windows_NT)
+	OS=Windows
 	RMDIR= rmdir
 	RMFILE= del /s /q
 	COPYFILE= copy
@@ -31,6 +40,7 @@ ifeq ($(OS), Linux)
 	COPYFILE= cp
 	SHARED_LIBRARY_EXT= so
 	FILE_SLASH=/
+endif
 endif
 endif
 
@@ -51,7 +61,7 @@ export LIBRARY_TYPE
 
 compile:bin obj update $(OBJNAMES)
 ifeq ($(LIBRARY_TYPE), shared)
-ifeq ($(OS), Windows_NT)
+ifeq ($(OS), Windows)
 	$(CC) -fpic -shared $(OBJ) -L $(BINDIR) -l deallocator -o $(BINDIR)/lib$(EXEC).$(SHARED_LIBRARY_EXT)
 endif
 ifeq ($(OS), Linux)
@@ -76,7 +86,7 @@ update:
 
 %.o:
 ifeq ($(LIBRARY_TYPE), shared)
-ifeq ($(OS), Windows_NT)
+ifeq ($(OS), Windows)
 	$(CC) -c $(SRCDIR)/$(@:.o=.cpp) -o $(OBJDIR)/$@
 endif
 ifeq ($(OS), Linux)
@@ -122,7 +132,7 @@ clean:
 	$(RMDIR) $(OBJDIR)
 	$(RMFILE) $(BINDIR)$(FILE_SLASH)*
 	$(RMDIR) $(BINDIR)
-	@(cd $(EXAMPLESDIR) && $(MAKE) $@)
+	- @(cd $(EXAMPLESDIR) && $(MAKE) $@)
 	@(cd ./lib/deallocator && $(MAKE) $@)
 
 all:

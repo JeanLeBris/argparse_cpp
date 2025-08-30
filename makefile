@@ -6,7 +6,7 @@ export CC=g++
 export CFLAGS=
 export LDFLAGS=
 export EXEC=argparse
-SRCNAMES= argparse.cpp subparser.cpp argument.cpp utils.cpp
+SRCNAMES= argparse.cpp subparser.cpp argument.cpp parsed_arguments.cpp utils.cpp
 export SRCDIR=src
 SRC= $(foreach srcname, $(SRCNAMES), $(SRCDIR)/$(srcname))
 OBJNAMES= $(SRCNAMES:.cpp=.o)

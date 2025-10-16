@@ -30,6 +30,8 @@ namespace argparse{
 
             bool is_key(const char* key);
 
+            argparse::undefined_type get_value_by_key(const char* key);
+
             void print_keys();
             
             void print_keys_and_values();

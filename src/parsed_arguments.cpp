@@ -176,4 +176,14 @@ namespace argparse{
 
         return false;
     }
+
+    argparse::undefined_type ParsedArguments::get_value_by_key(const char* key){
+        for(int i = 0; i < this->length; i++){
+            if(strcmp(this->keys[i], key) == 0){
+                return this->values[i];
+            }
+        }
+
+        return this->values[0];
+    }
 }
